@@ -53,6 +53,7 @@ const App = () => {
 
   const handleLinkedInAuth = (token) => {
     setAccessToken(token);
+    console.log("passei", token);
     localStorage.setItem('access_token', token);
   };
 
