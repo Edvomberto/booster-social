@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import PostGeneration from './pages/PostGeneration';
-import LinkedInAuth from '../LinkedInAuth';
+import LinkedInAuth from './pages/LinkedInAuth';
+import Settings from './pages/Settings';
 import '@coreui/coreui/dist/css/coreui.min.css';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -70,6 +71,7 @@ const App = () => {
               <Route path="/login" element={<Login setAuthData={setAuthData} />} />
               <Route path="/register" element={<Register />} />
               <Route path="/loginLinkedin" element={<LoginLinkedin />} />
+              <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </main>

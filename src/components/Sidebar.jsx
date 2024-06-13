@@ -2,7 +2,7 @@
 import React from 'react';
 import { CSidebar, CSidebarNav, CNavItem, CSidebarHeader, CSidebarBrand } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-import { cilSpeedometer, cilCalendar, cilCloudDownload, cilLayers, cilAccountLogout } from '@coreui/icons';
+import { cilSpeedometer, cilCalendar, cilCloudDownload, cilLayers, cilAccountLogout, cilSettings } from '@coreui/icons';
 
 const Sidebar = ({ handleLogout }) => {
   return (
@@ -22,6 +22,9 @@ const Sidebar = ({ handleLogout }) => {
         </CNavItem>
         <CNavItem href="/conexoes">
           <CIcon customClassName="nav-icon" icon={cilLayers} />
+        </CNavItem>
+        <CNavItem href="/booster-social/settings">
+          <CIcon customClassName="nav-icon" icon={cilSettings} />
         </CNavItem>
         <CNavItem>
           <button onClick={handleLogout} style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
