@@ -7,7 +7,7 @@ const LoginLinkedin = () => {
   useEffect(() => {
     if (!redirected) {
       setRedirected(true);
-      window.location.href = '/booster-social/loginLinkedin';
+      window.location.href = 'https://ws-booster-social-5040b10dd814.herokuapp.com/loginLinkedin';
     }
   }, [redirected]);
 
