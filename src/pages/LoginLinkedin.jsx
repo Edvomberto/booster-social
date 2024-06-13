@@ -11,7 +11,7 @@ const LoginLinkedin = () => {
     }
   }, [redirected]);
 
-  return <div>Redirecionando para o LinkedIn...</div>;
+  return <div>Autenticando no LinkedIn...</div>;
 };
 
 export default LoginLinkedin;
