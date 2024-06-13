@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import PostGeneration from './pages/PostGeneration';
-import LinkedInAuth from '../LinkedInAuth';
+import LinkedInAuth from '../pages/LinkedInAuth';
 import '@coreui/coreui/dist/css/coreui.min.css';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -51,7 +51,7 @@ const App = () => {
   };
 
   return (
-    <Router>
+    <Router basename="/booster-social">
       <div className="c-app c-default-layout">
         <Sidebar />
         <div className="wrapper d-flex flex-column min-vh-100 bg-light">
@@ -63,7 +63,7 @@ const App = () => {
               <Route path="/login" element={<Login setAuthData={setAuthData} />} />
               <Route path="/register" element={<Register />} />
               <Route path="/loginLinkedin" element={<LoginLinkedin />} />
-              <Route path="*" element={<Navigate to="/booster-social" />} />
+              <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </main>
           <Footer />
