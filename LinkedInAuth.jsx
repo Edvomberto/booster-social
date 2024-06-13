@@ -12,13 +12,13 @@ const LinkedInAuth = ({ onSuccess }) => {
     if (accessToken) {
       onSuccess(accessToken);
       // Limpar o token da URL após o uso
-      navigate('/booster-social');
+      navigate('/');
     }
   }, [onSuccess, navigate]);
 
   return (
     <div>
-      <a href="https://edvomberto.github.io/booster-social/loginLinkedin">Login com LinkedIn</a>
+      <a href="/loginLinkedin">Login com LinkedIn</a>
     </div>
   );
 };
