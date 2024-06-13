@@ -58,11 +58,11 @@ const App = () => {
           <Header />
           <main className="body flex-grow-1 px-3">
             <Routes>
-              <Route path="/booster-social/" element={<RequireAuth><PostGeneration accessToken={accessToken} /></RequireAuth>} />
-              <Route path="/booster-social/callback" element={<LinkedInAuth onSuccess={handleLinkedInAuth} />} />
-              <Route path="/booster-social/login" element={<Login setAuthData={setAuthData} />} />
+              <Route path="/" element={<RequireAuth><PostGeneration accessToken={accessToken} /></RequireAuth>} />
+              <Route path="/callback" element={<LinkedInAuth onSuccess={handleLinkedInAuth} />} />
+              <Route path="/login" element={<Login setAuthData={setAuthData} />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/booster-social/loginLinkedin" element={<LoginLinkedin />} />
+              <Route path="/loginLinkedin" element={<LoginLinkedin />} />
               <Route path="*" element={<Navigate to="/booster-social" />} />
             </Routes>
           </main>
