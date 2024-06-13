@@ -7,7 +7,7 @@ const LoginLinkedin = () => {
   useEffect(() => {
     if (!redirected) {
       setRedirected(true);
-      window.location.href = '/loginLinkedin';
+      window.location.href = '/booster-social/loginLinkedin';
     }
   }, [redirected]);
 
