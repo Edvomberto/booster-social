@@ -18,7 +18,7 @@ const LinkedInAuth = ({ onSuccess }) => {
 
   return (
     <div>
-      <a href="http://localhost:5000/loginLinkedin">Login com LinkedIn</a>
+      <a href="https://edvomberto.github.io/booster-social/loginLinkedin">Login com LinkedIn</a>
     </div>
   );
 };
