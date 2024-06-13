@@ -1,0 +1,40 @@
+.sidebar-fixed {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  z-index: var(--zindex-fixed);
+
+  &:not(.sidebar-end) {
+    left: 0;
+  }
+
+  &.sidebar-end {
+    right: 0;
+  }
+}
+
+.sidebar {
+  background-color: #343a40;
+  min-width: 56px; /* Ajustar largura mínima para sidebar */
+  --cui-sidebar-width: 56px;
+}
+
+.sidebar-nav {
+  padding: 0;
+  list-style: none; /* Remover bullets */
+  margin-top: 1rem;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Centralizar o conteúdo */
+  color: #adb5bd;
+  padding: 0.5rem;
+  text-decoration: none;
+}
+
+.nav-link:hover {
+  background-color: #495057;
+  color: #ffffff;
+}

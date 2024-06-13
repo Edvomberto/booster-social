@@ -1,0 +1,72 @@
+.board {
+    display: flex;
+    justify-content: space-around;
+    padding: 20px;
+  }
+  
+  .column {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  
+  .column-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    max-height: 550px; /* Ajuste conforme necessário */
+    background-color: #f1f2f4;
+  }
+
+  .header-column {
+    background-color: #f1f2f4;
+    font-family:Verdana, Geneva, Tahoma, sans-serif;
+    font-weight: 600;
+  }
+  
+  .add-post-footer {
+    text-align: center;
+    padding: 10px 0;
+    border-top: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+  }
+  
+  .add-post-button {
+    width: 100%;
+    background-color: #f1f2f4;
+    font-size: medium;
+    font-weight: 500;
+  }
+  
+  
+  .task {
+    border: 1px solid lightgrey;
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 8px;
+    background-color: white;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .modal-lg-custom {
+    max-width: 80% !important;
+  }
+
+  .linkedin-preview {
+    border: 1px solid #ddd;
+    padding: 15px;
+    background-color: #f9f9f9;
+    margin-top: 20px;
+  }
+
+  .post-content {
+    white-space: normal;
+    line-height: 1.5;
+  }
+  
+  
+  .input-group-title {
+    max-width: 400px; /* Ajuste esta largura conforme necessário */
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+  
