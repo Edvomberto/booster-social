@@ -31,7 +31,7 @@ const App = () => {
   const handleLogout = () => {
     setAuthData(null);
     localStorage.removeItem('access_token');
-    window.location.href = '/login'; // Redirecionar para a página de login
+    window.location.href = '/booster-social/login'; // Redirecionar para a página de login
   };
 
   useEffect(() => {
