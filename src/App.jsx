@@ -28,6 +28,12 @@ const App = () => {
     setToken(token);
   };
 
+  const handleLogout = () => {
+    setAuthData(null);
+    localStorage.removeItem('access_token');
+    window.location.href = '/login'; // Redirecionar para a página de login
+  };
+
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -39,7 +45,7 @@ const App = () => {
     console.log('Token:', token);
 
     if (!token) {
-      return <Navigate to="/booster-social/login" state={{ from: location }} />;
+      return <Navigate to="/login" state={{ from: location }} />;
     }
 
     return children;
@@ -53,7 +59,7 @@ const App = () => {
   return (
     <Router basename="/booster-social">
       <div className="c-app c-default-layout">
-        <Sidebar />
+        <Sidebar handleLogout={handleLogout} />
         <div className="wrapper d-flex flex-column min-vh-100 bg-light">
           <Header />
           <main className="body flex-grow-1 px-3">
