@@ -1,42 +1,131 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+.c-app {
+  display: flex;
+  height: 100vh;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.c-default-layout {
+  display: flex;
+  flex-direction: row; /* Mudar para row para ter a sidebar na lateral */
+  width: 100%;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.bg-light {
+  background-color: #f8f9fa !important;
 }
 
-.card {
-  padding: 2em;
+.nav-icon {
+  width: 24px; /* Tamanho do ícone */
+  height: 24px;
+  display: block;
+  margin: 0 auto; /* Centralizar os ícones */
 }
 
-.read-the-docs {
-  color: #888;
+.c-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e5e5;
 }
+
+.c-header-brand {
+  display: flex;
+  align-items: center;
+  font-size: 1.25rem;
+  text-decoration: none;
+  color: #343a40;
+}
+
+.content {
+  padding: 10px; /* Adicionar padding à área de conteúdo */
+  margin: 10px; /* Adicionar margem à área de conteúdo */
+  background-color: #ffffff; /* Adicionar fundo branco para contraste */
+  border-radius: 8px; /* Adicionar bordas arredondadas */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Adicionar sombra para destaque */
+  width: 98%;
+}
+
+.task-form {
+  max-width: 600px; /* Limitar a largura do formulário */
+  margin: 0 auto; /* Centralizar o formulário */
+  background-color: #f8f9fa; /* Fundo diferente para o formulário */
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.task-form .form-group {
+  margin-bottom: 1rem;
+}
+
+.task-form label {
+  font-weight: bold;
+}
+
+.task-form input,
+.task-form select {
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.task-form .btn {
+  margin-top: 1rem;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  z-index: 1000;
+}
+
+/* Estilos para contêineres */
+.column-container {
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Estilizar botão de remoção */
+.remove-btn {
+  background: none;
+  border: none;
+  color: red;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-left: 5px;
+}
+
+.remove-btn:hover {
+  color: darkred;
+}
+
+
+/* Botão de fechamento do modal */
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #000;
+  z-index: 1;
+}
+
+.close-btn:hover {
+  color: #ff0000;
+}
+
+

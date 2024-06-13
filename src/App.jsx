@@ -1,36 +1,78 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// src/App.jsx
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
+import PostGeneration from './pages/PostGeneration';
+import LinkedInAuth from '../LinkedInAuth';
+import '@coreui/coreui/dist/css/coreui.min.css';
+import Header from './components/Header';
+import Footer from './components/Footer';
+import Sidebar from './components/Sidebar';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import LoginLinkedin from './pages/LoginLinkedin'; // Importe o novo componente
 
-function App() {
-  const [count, setCount] = useState(0)
+import axios from 'axios';
+
+import './App.css';
+
+const App = () => {
+  const [accessToken, setAccessToken] = useState('');
+  const [token, setToken] = useState(localStorage.getItem('token'));
+
+  const setAuthData = (token) => {
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      localStorage.setItem('token', token);
+    } else {
+      delete axios.defaults.headers.common['Authorization'];
+      localStorage.removeItem('token');
+    }
+    setToken(token);
+  };
+
+  useEffect(() => {
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    }
+  }, [token]);
+
+  const RequireAuth = ({ children }) => {
+    const location = useLocation();
+    console.log('Token:', token);
+
+    if (!token) {
+      return <Navigate to="/login" state={{ from: location }} />;
+    }
+
+    return children;
+  };
+
+  const handleLinkedInAuth = (token) => {
+    setAccessToken(token);
+    localStorage.setItem('access_token', token);
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-        <h3>Edvomberto Honorato yyyyyy</h3>
+    <Router>
+      <div className="c-app c-default-layout">
+        <Sidebar />
+        <div className="wrapper d-flex flex-column min-vh-100 bg-light">
+          <Header />
+          <main className="body flex-grow-1 px-3">
+            <Routes>
+              <Route path="/" element={<RequireAuth><PostGeneration accessToken={accessToken} /></RequireAuth>} />
+              <Route path="/callback" element={<LinkedInAuth onSuccess={handleLinkedInAuth} />} />
+              <Route path="/login" element={<Login setAuthData={setAuthData} />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/loginLinkedin" element={<LoginLinkedin />} />
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    </Router>
+  );
+};
 
-export default App
+export default App;
