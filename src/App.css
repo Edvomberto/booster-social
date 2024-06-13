@@ -1,3 +1,11 @@
+/* App.css */
+body, html, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 .c-app {
   display: flex;
   height: 100vh;
@@ -5,7 +13,7 @@
 
 .c-default-layout {
   display: flex;
-  flex-direction: row; /* Mudar para row para ter a sidebar na lateral */
+  flex-direction: row; /* Manter para ter a sidebar na lateral */
   width: 100%;
 }
 
@@ -49,7 +57,8 @@
   background-color: #ffffff; /* Adicionar fundo branco para contraste */
   border-radius: 8px; /* Adicionar bordas arredondadas */
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Adicionar sombra para destaque */
-  width: 98%;
+  width: 100%; /* Ajustar largura para 100% */
+  box-sizing: border-box; /* Incluir padding e borda na largura total */
 }
 
 .task-form {
@@ -94,6 +103,7 @@
 .column-container {
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap; /* Adicionar wrap para responsividade */
 }
 
 /* Estilizar botão de remoção */
@@ -109,7 +119,6 @@
 .remove-btn:hover {
   color: darkred;
 }
-
 
 /* Botão de fechamento do modal */
 .close-btn {
@@ -127,5 +136,3 @@
 .close-btn:hover {
   color: #ff0000;
 }
-
-
