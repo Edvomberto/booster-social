@@ -1,4 +1,4 @@
-// LinkedInAuth.jsx
+// src/pages/LinkedInAuth.jsx
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -12,7 +12,7 @@ const LinkedInAuth = ({ onSuccess }) => {
     if (accessToken) {
       onSuccess(accessToken);
       // Limpar o token da URL após o uso
-      navigate('/');
+      navigate('/booster-social');
     }
   }, [onSuccess, navigate]);
 

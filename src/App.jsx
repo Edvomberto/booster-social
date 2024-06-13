@@ -2,21 +2,19 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import PostGeneration from './pages/PostGeneration';
-import LinkedInAuth from '../LinkedInAuth';
+import LinkedInAuth from './pages/LinkedInAuth';
 import '@coreui/coreui/dist/css/coreui.min.css';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import LoginLinkedin from './pages/LoginLinkedin'; // Importe o novo componente
-
+import LoginLinkedin from './pages/LoginLinkedin';
 import axios from 'axios';
-
 import './App.css';
 
 const App = () => {
-  const [accessToken, setAccessToken] = useState('');
+  const [accessToken, setAccessToken] = useState(localStorage.getItem('access_token') || '');
   const [token, setToken] = useState(localStorage.getItem('token'));
 
   const setAuthData = (token) => {
