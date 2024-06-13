@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import PostGeneration from './pages/PostGeneration';
-import LinkedInAuth from '../pages/LinkedInAuth';
+import LinkedInAuth from '../LinkedInAuth';
 import '@coreui/coreui/dist/css/coreui.min.css';
 import Header from './components/Header';
 import Footer from './components/Footer';
