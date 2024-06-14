@@ -85,7 +85,7 @@ function PostGeneration({ accessToken }) {
 
   useEffect(() => {
     const fetchData = async () => {
-      const result = await axios.get('/posts');
+      const result = await axios.get('/post/posts');
       const tasks = {};
       const columns = {
         'column-0': {
@@ -192,7 +192,7 @@ function PostGeneration({ accessToken }) {
 
     const postId = draggableId.replace('task-', '');
     try {
-      await axios.put(`/posts/${postId}`, { columnId: destination.droppableId });
+      await axios.put(`/post/posts/${postId}`, { columnId: destination.droppableId });
       setData(newState);
     } catch (error) {
       console.error('Erro ao atualizar post:', error);
@@ -211,7 +211,7 @@ function PostGeneration({ accessToken }) {
 
       let response;
       if (currentPost) {
-        response = await axios.put(`/posts/${currentPost.id.replace('task-', '')}`, formData, {
+        response = await axios.put(`/post/posts/${currentPost.id.replace('task-', '')}`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },

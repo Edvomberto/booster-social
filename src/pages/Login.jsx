@@ -15,18 +15,18 @@ const Login = ({ setAuthData }) => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('/login-booster', { username, password });
-      const { token } = response.data.result;
+      const response = await axios.post('/user/login-booster', { username, password });
+      const { token } = response.data;
+      console.log(token);
       console.log("Resposta do servidor:", response);
       const decoded = jwtDecode(token);
-      const companyId = decoded.companyId;
       const userId = decoded.userId; // Assumindo que o token inclui o ID do usuário
 
-      setAuthData(token, companyId);
+      setAuthData(token);
       console.log("Redirecionando para:", from);
 
       // Redirecionar para /loginLinkedin após o login inicial
-      navigate(`/loginLinkedin?user_id=${userId}`, { replace: true });
+      navigate(`/post/loginLinkedin?user_id=${userId}`, { replace: true });
     } catch (error) {
       console.error('Erro durante o login:', error);
       setError('Username ou senha inválido!');

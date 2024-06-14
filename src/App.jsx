@@ -11,7 +11,7 @@ import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import LoginLinkedin from './pages/LoginLinkedin';
-import axios from 'axios';
+import axios from './axiosConfig';
 import './App.css';
 
 const App = () => {
@@ -58,10 +58,12 @@ const App = () => {
     localStorage.setItem('access_token', token);
   };
 
+  console.log(token);
+
   return (
     <Router basename="/booster-social">
       <div className="c-app c-default-layout">
-        <Sidebar handleLogout={handleLogout} />
+        <Sidebar handleLogout={handleLogout} accessToken={accessToken} />
         <div className="wrapper d-flex flex-column min-vh-100 bg-light">
           <Header />
           <main className="body flex-grow-1 px-3">
@@ -71,7 +73,7 @@ const App = () => {
               <Route path="/login" element={<Login setAuthData={setAuthData} />} />
               <Route path="/register" element={<Register />} />
               <Route path="/loginLinkedin" element={<LoginLinkedin />} />
-              <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
+              <Route path="/settings" element={<RequireAuth><Settings accessToken={accessToken} setAccessToken={setAccessToken} /></RequireAuth>} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </main>

@@ -1,16 +1,41 @@
 // src/components/Sidebar.jsx
-import React from 'react';
-import { CSidebar, CSidebarNav, CNavItem, CSidebarHeader, CSidebarBrand } from '@coreui/react';
+import React, { useEffect, useState } from 'react';
+import { CSidebar, CSidebarNav, CNavItem, CSidebarHeader, CSidebarBrand, CAvatar } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilSpeedometer, cilCalendar, cilCloudDownload, cilLayers, cilAccountLogout, cilSettings } from '@coreui/icons';
+import axios from '../axiosConfig';
 
-const Sidebar = ({ handleLogout }) => {
+const Sidebar = ({ handleLogout, accessToken }) => {
+  const [userInfo, setUserInfo] = useState(null);
+
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const response = await axios.get(`https://postlinkedin-229725447ae4.herokuapp.com/get-user-info?access_token=${accessToken}`);
+        setUserInfo(response.data);
+        console.log(response.data);
+      } catch (error) {
+        console.error('Error fetching user info:', error);
+      }
+    };
+
+    if (accessToken) {
+      fetchUserInfo();
+    }
+  }, [accessToken]);
+
   return (
     <CSidebar className="border-end" narrow>
       <CSidebarHeader className="border-bottom">
         <CSidebarBrand>CUI</CSidebarBrand>
       </CSidebarHeader>
       <CSidebarNav>
+        {userInfo && (
+          <div className="text-center p-3">
+            <CAvatar src={userInfo.picture} size="md" />
+            <div>{userInfo.name}</div>
+          </div>
+        )}
         <CNavItem href="/">
           <CIcon customClassName="nav-icon" icon={cilSpeedometer} />
         </CNavItem>
