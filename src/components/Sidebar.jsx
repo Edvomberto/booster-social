@@ -19,10 +19,13 @@ const Sidebar = ({ handleLogout, accessToken }) => {
       }
     };
 
-    if (accessToken) {
+    if (accessToken && !userInfo) {
+      console.log('Fetching user info with access token:', accessToken); // Adicionado para depuração
       fetchUserInfo();
+    } else {
+      console.log('No access token provided or userInfo already loaded'); // Adicionado para depuração
     }
-  }, [accessToken]);
+  }, [accessToken, userInfo]);
 
   return (
     <CSidebar className="border-end" narrow>
