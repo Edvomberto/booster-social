@@ -17,16 +17,14 @@ const Login = ({ setAuthData }) => {
     try {
       const response = await axios.post('/user/login-booster', { username, password });
       const { token } = response.data;
-      console.log(token);
-      console.log("Resposta do servidor:", response);
       const decoded = jwtDecode(token);
       const userId = decoded.userId; // Assumindo que o token inclui o ID do usuário
 
       setAuthData(token);
-      console.log("Redirecionando para:", from);
+      console.log("usuario para:", userId);
 
       // Redirecionar para /loginLinkedin após o login inicial
-      navigate(`/post/loginLinkedin?user_id=${userId}`, { replace: true });
+      navigate(`/loginLinkedin?user_id=${userId}`, { replace: true });
     } catch (error) {
       console.error('Erro durante o login:', error);
       setError('Username ou senha inválido!');

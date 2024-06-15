@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 const LoginLinkedin = ({userId}) => {
   const [redirected, setRedirected] = useState(false);
 
-  console.log("usuario", userId);
+  console.log("usuario kkkkkkk", userId);
 
   useEffect(() => {
     if (!redirected) {

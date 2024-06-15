@@ -43,7 +43,7 @@ const App = () => {
 
   const RequireAuth = ({ children }) => {
     const location = useLocation();
-    console.log('Token:', token);
+    console.log('accessToken:', accessToken);
 
     if (!token) {
       return <Navigate to="/login" state={{ from: location }} />;
@@ -52,18 +52,18 @@ const App = () => {
     return children;
   };
 
-  const handleLinkedInAuth = (token) => {
-    setAccessToken(token);
-    console.log("passei", token);
-    localStorage.setItem('access_token', token);
+  const handleLinkedInAuth = (access_token) => {
+    setAccessToken(access_token);
+    console.log("passei handleLinkedInAuth: ", access_token);
+    localStorage.setItem('access_token', access_token);
   };
 
-  console.log(token);
+  console.log("fffffffff", accessToken);
 
   return (
     <Router basename="/booster-social">
       <div className="c-app c-default-layout">
-        <Sidebar handleLogout={handleLogout} accessToken={token} />
+        <Sidebar handleLogout={handleLogout} accessToken={accessToken} />
         <div className="wrapper d-flex flex-column min-vh-100 bg-light">
           <Header />
           <main className="body flex-grow-1 px-3">
