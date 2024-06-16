@@ -13,6 +13,7 @@ const Login = ({ setAuthData }) => {
   const from = location.state?.from?.pathname || '/';
 
   const handleLogin = async (e) => {
+    console.log(username, password);
     e.preventDefault();
     try {
       const response = await axios.post('/user/login-booster', { username, password });
@@ -24,7 +25,8 @@ const Login = ({ setAuthData }) => {
       console.log("usuario para:", userId);
 
       // Redirecionar para /loginLinkedin após o login inicial
-      navigate(`/loginLinkedin?user_id=${userId}`, { replace: true });
+      // navigate(`/loginLinkedin?user_id=${userId}`, { replace: true });
+      navigate(`https://ws-booster-social-5040b10dd814.herokuapp.com/api/post/loginLinkedin?userId=${userId}`, { replace: true }    );
     } catch (error) {
       console.error('Erro durante o login:', error);
       setError('Username ou senha inválido!');

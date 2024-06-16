@@ -5,8 +5,11 @@ import CIcon from '@coreui/icons-react';
 import { cilSpeedometer, cilCalendar, cilCloudDownload, cilLayers, cilAccountLogout, cilSettings } from '@coreui/icons';
 import axios from '../axiosConfig';
 
-const Sidebar = ({ handleLogout, accessToken }) => {
+const Sidebar = ({ handleLogout }) => {
   const [userInfo, setUserInfo] = useState(null);
+
+  const accessToken = localStorage.getItem('access_token');
+  console.log("aaaaaaaaa", localStorage);
 
   useEffect(() => {
     const fetchUserInfo = async () => {
