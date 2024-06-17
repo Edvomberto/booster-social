@@ -15,14 +15,16 @@ const Login = ({ setAuthData }) => {
   useEffect(() => {
     const accessToken = localStorage.getItem('access_token');
     if (!accessToken) {
-      navigate('/loginLinkedin', { replace: true });
+      // navigate('/loginLinkedin', { replace: true });
+      navigate('/login', { replace: true });
+
     }
   }, [navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('/login-booster', { username, password });
+      const response = await axios.post('/user/login-booster', { username, password });
       const { token, accessToken } = response.data; // Adiciona accessToken aqui
 
       // Decodifica o token JWT para obter o userId
