@@ -9,7 +9,6 @@ const Sidebar = ({ handleLogout }) => {
   const [userInfo, setUserInfo] = useState(null);
 
   const accessToken = localStorage.getItem('access_token');
-  console.log("aaaaaaaaa", localStorage);
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -23,7 +22,6 @@ const Sidebar = ({ handleLogout }) => {
     };
 
     if (accessToken && !userInfo) {
-      console.log('Fetching user info with access token:', accessToken); // Adicionado para depuração
       fetchUserInfo();
     } else {
       console.log('No access token provided or userInfo already loaded'); // Adicionado para depuração

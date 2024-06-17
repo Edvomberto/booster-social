@@ -13,14 +13,20 @@ import {
   Col,
   Spinner,
   InputGroup,
-  InputGroupText
+  InputGroupText,
 } from 'reactstrap';
 import './PostGeneration.css';
 import axios from '../axiosConfig';
 import { CToast, CToastBody, CToastHeader, CToaster, CButtonGroup, CFormCheck } from '@coreui/react';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import FadeWrapper from '../components/FadeWrapper'; // Importando o wrapper
 
-const PostModal = ({ isOpen, toggle, onSave, post }) => {
+const PostModal = ({
+  isOpen = false,
+  toggle = () => {},
+  onSave = () => {},
+  post = null,
+}) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [imageUrl, setImageUrl] = useState('');
@@ -28,7 +34,7 @@ const PostModal = ({ isOpen, toggle, onSave, post }) => {
   const [ideas, setIdeas] = useState([{ summary: '' }]);
   const [currentIdeaIndex, setCurrentIdeaIndex] = useState(0);
   const [loading, setLoading] = useState(false);
-  const accessToken = useState('');
+  const [accessToken] = useState('');
   const [selectedStyle, setSelectedStyle] = useState('');
   const [selectedGenerator, setSelectedGenerator] = useState('leonardo');
   const [selectedAi, setSelectedAi] = useState('llama3'); // State for selected AI
@@ -60,7 +66,7 @@ const PostModal = ({ isOpen, toggle, onSave, post }) => {
 
     const postData = {
       title,
-      content: content,
+      content,
       image: imageUrl,
     };
     await onSave(postData);
@@ -90,7 +96,7 @@ const PostModal = ({ isOpen, toggle, onSave, post }) => {
     setLoading(true);
     const qtde = 3;
     try {
-      const response = await axios.post('/post-ideas-llama', { subject, qtde });
+      const response = await axios.post('/post/post-ideas-llama', { subject, qtde });
       setIdeas(response.data.ideas.ideas);
       setCurrentIdeaIndex(0); // Reset to the first idea
     } catch (error) {
@@ -118,11 +124,11 @@ const PostModal = ({ isOpen, toggle, onSave, post }) => {
       try {
         let response;
         if (selectedAi === 'llama3') {
-          response = await axios.post('/create-post-llama', { idea: `${ideas[currentIdeaIndex].title}\n${ideas[currentIdeaIndex].summary}` });
+          response = await axios.post('/post/create-post-llama', { idea: `${ideas[currentIdeaIndex].title}\n${ideas[currentIdeaIndex].summary}` });
         } else if (selectedAi === 'gpt') {
-          response = await axios.post('/create-post-gpt', { idea: `${ideas[currentIdeaIndex].title}\n${ideas[currentIdeaIndex].summary}` });
+          response = await axios.post('/post/create-post-gpt', { idea: `${ideas[currentIdeaIndex].title}\n${ideas[currentIdeaIndex].summary}` });
         } else if (selectedAi === 'gemini') {
-          response = await axios.post('/create-post-gemini', { idea: `${ideas[currentIdeaIndex].title}\n${ideas[currentIdeaIndex].summary}` });
+          response = await axios.post('/post/create-post-gemini', { idea: `${ideas[currentIdeaIndex].title}\n${ideas[currentIdeaIndex].summary}` });
         }
 
         const { title, content } = response.data.post;
@@ -144,6 +150,7 @@ const PostModal = ({ isOpen, toggle, onSave, post }) => {
     if (!storedAccessToken) {
       addToast('Faça login no LinkedIn primeiro.', 'warning');
       setLoading(false);
+      window.location.href = '/booster-social/loginLinkedin'; // Redirecionar para a página de login
       return;
     }
 
@@ -154,7 +161,7 @@ const PostModal = ({ isOpen, toggle, onSave, post }) => {
     };
 
     try {
-      await axios.post('/post-linkedin', postContent, {
+      await axios.post('/post/post-linkedin', postContent, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -174,8 +181,8 @@ const PostModal = ({ isOpen, toggle, onSave, post }) => {
       setLoading(true);
       try {
         const response = selectedGenerator === 'leonardo'
-          ? await axios.post('/gerar-imagem-leo', { prompt: contextText, estilo: selectedStyle })
-          : await axios.post('/gerar-imagem', { prompt: contextText, estilo: selectedStyle });
+          ? await axios.post('/post/gerar-imagem-leo', { prompt: contextText, estilo: selectedStyle })
+          : await axios.post('/post/gerar-imagem', { prompt: contextText, estilo: selectedStyle });
 
         setImageUrl(response.data.imageUrl);
         addToast('Imagem gerada com sucesso!', 'success');
@@ -192,7 +199,7 @@ const PostModal = ({ isOpen, toggle, onSave, post }) => {
     if (contentText) {
       setLoading(true);
       try {
-        const response = await axios.post('/gerar-titulo', { content: contentText });
+        const response = await axios.post('/post/gerar-titulo', { content: contentText });
         setTitle(response.data.title);
         addToast('Título gerado com sucesso!', 'success');
       } catch (error) {
@@ -282,39 +289,39 @@ const PostModal = ({ isOpen, toggle, onSave, post }) => {
                   {loading ? <Spinner size="sm" /> : 'Gerar Post'}
                 </Button>
                 <FormGroup>
-              <CButtonGroup role="group" aria-label="Basic radio toggle button group">
-                <CFormCheck
-                  type="radio"
-                  button={{ color: 'primary', variant: 'outline' }}
-                  name="btnradioAi"
-                  id="btnradioAi1"
-                  autoComplete="off"
-                  label="Llama 3"
-                  checked={selectedAi === 'llama3'}
-                  onChange={() => setSelectedAi('llama3')}
-                />
-                <CFormCheck
-                  type="radio"
-                  button={{ color: 'primary', variant: 'outline' }}
-                  name="btnradioAi"
-                  id="btnradioAi2"
-                  autoComplete="off"
-                  label="GPT"
-                  checked={selectedAi === 'gpt'}
-                  onChange={() => setSelectedAi('gpt')}
-                />
-                <CFormCheck
-                  type="radio"
-                  button={{ color: 'primary', variant: 'outline' }}
-                  name="btnradioAi"
-                  id="btnradioAi3"
-                  autoComplete="off"
-                  label="Gemini"
-                  checked={selectedAi === 'gemini'}
-                  onChange={() => setSelectedAi('gemini')}
-                />
-              </CButtonGroup>
-            </FormGroup>                
+                  <CButtonGroup role="group" aria-label="Basic radio toggle button group">
+                    <CFormCheck
+                      type="radio"
+                      button={{ color: 'primary', variant: 'outline' }}
+                      name="btnradioAi"
+                      id="btnradioAi1"
+                      autoComplete="off"
+                      label="Llama 3"
+                      checked={selectedAi === 'llama3'}
+                      onChange={() => setSelectedAi('llama3')}
+                    />
+                    <CFormCheck
+                      type="radio"
+                      button={{ color: 'primary', variant: 'outline' }}
+                      name="btnradioAi"
+                      id="btnradioAi2"
+                      autoComplete="off"
+                      label="GPT"
+                      checked={selectedAi === 'gpt'}
+                      onChange={() => setSelectedAi('gpt')}
+                    />
+                    <CFormCheck
+                      type="radio"
+                      button={{ color: 'primary', variant: 'outline' }}
+                      name="btnradioAi"
+                      id="btnradioAi3"
+                      autoComplete="off"
+                      label="Gemini"
+                      checked={selectedAi === 'gemini'}
+                      onChange={() => setSelectedAi('gemini')}
+                    />
+                  </CButtonGroup>
+                </FormGroup>
               </div>
             </FormGroup>
           </Col>
@@ -415,7 +422,6 @@ const PostModal = ({ isOpen, toggle, onSave, post }) => {
                 />
               </CButtonGroup>
             </FormGroup>
-
           </Col>
           <Col md="5">
             <div className="linkedin-preview">

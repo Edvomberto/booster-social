@@ -22,7 +22,6 @@ const Login = ({ setAuthData }) => {
       const userId = decoded.userId; // Assumindo que o token inclui o ID do usuário
 
       setAuthData(token);
-      console.log("usuario para:", userId);
 
       // Redirecionar para /loginLinkedin após o login inicial
       // navigate(`/loginLinkedin?user_id=${userId}`, { replace: true });

@@ -272,7 +272,7 @@ function PostGeneration({ accessToken }) {
   const handleDeletePost = async (taskId, columnId) => {
     const postId = taskId.replace('task-', ''); // Extrair a ID do post
     try {
-      await axios.delete(`/posts/${postId}`);
+      await axios.delete(`/post/posts/${postId}`);
       const updatedTasks = { ...data.tasks };
       delete updatedTasks[taskId];
 

@@ -6,14 +6,20 @@ const LinkedInAuth = ({ onSuccess }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const accessToken = urlParams.get('access_token');
+    const handleAuth = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const accessToken = urlParams.get('access_token');
 
-    if (accessToken) {
-      onSuccess(accessToken);
-      // Limpar o token da URL após o uso
-      navigate('/booster-social', { replace: true });
-    }
+      console.log("Access Token:", accessToken);
+
+      if (accessToken) {
+        onSuccess(accessToken);
+        // Limpar o token da URL após o uso
+        navigate('/booster-social', { replace: true });
+      }
+    };
+
+    handleAuth();
   }, [onSuccess, navigate]);
 
   return (
