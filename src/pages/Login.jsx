@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from '../axiosConfig';
 import { jwtDecode } from 'jwt-decode';
@@ -12,6 +12,13 @@ const Login = ({ setAuthData }) => {
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
 
+  useEffect(() => {
+    const accessToken = localStorage.getItem('access_token');
+    if (!accessToken) {
+      navigate('/loginLinkedin', { replace: true });
+    }
+  }, [navigate]);
+
   const handleLogin = async (e) => {
     console.log(username, password);
     e.preventDefault();
@@ -24,8 +31,7 @@ const Login = ({ setAuthData }) => {
       setAuthData(token);
 
       // Redirecionar para /loginLinkedin após o login inicial
-      // navigate(`/loginLinkedin?user_id=${userId}`, { replace: true });
-      navigate(`https://ws-booster-social-5040b10dd814.herokuapp.com/api/post/loginLinkedin?userId=${userId}`, { replace: true }    );
+      navigate(`/loginLinkedin?user_id=${userId}`, { replace: true });
     } catch (error) {
       console.error('Erro durante o login:', error);
       setError('Username ou senha inválido!');

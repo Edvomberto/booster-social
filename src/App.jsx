@@ -1,4 +1,3 @@
-// src/App.jsx
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import PostGeneration from './pages/PostGeneration';
@@ -18,6 +17,14 @@ const App = () => {
   const [accessToken, setAccessToken] = useState(localStorage.getItem('access_token') || '');
   const [token, setToken] = useState(localStorage.getItem('token'));
 
+  useEffect(() => {
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+      delete axios.defaults.headers.common['Authorization'];
+    }
+  }, [token]);
+
   const setAuthData = (token) => {
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -35,12 +42,6 @@ const App = () => {
     window.location.href = '/booster-social/login'; // Redirecionar para a página de login
   };
 
-  useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    }
-  }, [token]);
-
   const RequireAuth = ({ children }) => {
     const location = useLocation();
 
@@ -54,6 +55,8 @@ const App = () => {
   const handleLinkedInAuth = (access_token) => {
     setAccessToken(access_token);
     localStorage.setItem('access_token', access_token);
+    // Adiciona a configuração do axios com o access_token
+    axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
   };
 
   return (
