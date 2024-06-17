@@ -20,15 +20,18 @@ const Login = ({ setAuthData }) => {
   }, [navigate]);
 
   const handleLogin = async (e) => {
-    console.log(username, password);
     e.preventDefault();
     try {
-      const response = await axios.post('/user/login-booster', { username, password });
-      const { token } = response.data;
-      const decoded = jwtDecode(token);
-      const userId = decoded.userId; // Assumindo que o token inclui o ID do usuário
+      const response = await axios.post('/login-booster', { username, password });
+      const { token, accessToken } = response.data; // Adiciona accessToken aqui
 
+      // Decodifica o token JWT para obter o userId
+      const decoded = jwtDecode(token);
+      const userId = decoded.userId;
+
+      // Armazena o token JWT e o accessToken no localStorage
       setAuthData(token);
+      localStorage.setItem('access_token', accessToken);
 
       // Redirecionar para /loginLinkedin após o login inicial
       navigate(`/loginLinkedin?user_id=${userId}`, { replace: true });

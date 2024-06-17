@@ -1,3 +1,4 @@
+// src/App.jsx
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import PostGeneration from './pages/PostGeneration';
@@ -55,7 +56,6 @@ const App = () => {
   const handleLinkedInAuth = (access_token) => {
     setAccessToken(access_token);
     localStorage.setItem('access_token', access_token);
-    // Adiciona a configuração do axios com o access_token
     axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
   };
 
