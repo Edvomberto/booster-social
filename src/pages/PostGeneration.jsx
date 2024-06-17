@@ -217,7 +217,7 @@ function PostGeneration({ accessToken }) {
           },
         });
       } else {
-        response = await axios.post('/posts', formData, {
+        response = await axios.post('/post/posts', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
@@ -304,7 +304,7 @@ function PostGeneration({ accessToken }) {
         formData.append('image', post.image);
       }
 
-      const response = await axios.post('/posts', formData, {
+      const response = await axios.post('/post/posts', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
