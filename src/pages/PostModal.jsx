@@ -150,7 +150,7 @@ const PostModal = ({
     if (!storedAccessToken) {
       addToast('Faça login no LinkedIn primeiro.', 'warning');
       setLoading(false);
-      window.location.href = '/booster-social/loginLinkedin'; // Redirecionar para a página de login
+      window.location.href = '/loginLinkedin'; // Redirecionar para a página de login
       return;
     }
 
