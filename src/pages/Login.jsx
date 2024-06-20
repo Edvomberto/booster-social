@@ -35,9 +35,11 @@ const Login = ({ setAuthData }) => {
       setAuthData(tokenBooster);
       localStorage.setItem('access_token', accessToken);
       localStorage.setItem('tokenBooster', tokenBooster);
+      localStorage.setItem('userId', userId);
+
 
         // Envia o token para o content script do Chrome
-        window.postMessage({ type: 'FROM_PAGE', tokenBooster: tokenBooster }, '*');
+        // window.postMessage({ type: 'FROM_PAGE', tokenBooster: tokenBooster }, '*');
 
 
       navigate(`/`, { replace: true });

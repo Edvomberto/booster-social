@@ -72,7 +72,7 @@ const truncateHtml = (html, maxLines = 2) => {
   return truncatedHtml;
 };
 
-function PostGeneration({ accessToken }) {
+function PostGeneration({ accessToken, userId }) {
   const [data, setData] = useState(initialData);
   const [modalOpen, setModalOpen] = useState(false);
   const [currentPost, setCurrentPost] = useState(null);
@@ -437,6 +437,7 @@ function PostGeneration({ accessToken }) {
         onSave={handlePostPost}
         onPost={handlePostPost}
         post={currentPost}
+        userId={userId}
       />
       <CToaster position="top-right">
         {toasts.map((toast, index) => (

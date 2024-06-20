@@ -17,6 +17,8 @@ import './App.css';
 const App = () => {
   const [accessToken, setAccessToken] = useState(localStorage.getItem('access_token') || '');
   const [tokenBooster, setTokenBooster] = useState(localStorage.getItem('tokenBooster'));
+  const [userId, setUserId] = useState(localStorage.getItem('userId'));
+
 
   useEffect(() => {
     if (tokenBooster) {
@@ -30,6 +32,8 @@ const App = () => {
     if (tokenBooster) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${tokenBooster}`;
       localStorage.setItem('tokenBooster', tokenBooster);
+      localStorage.setItem('userId', userId);
+
     } else {
       delete axios.defaults.headers.common['Authorization'];
       localStorage.removeItem('tokenBooster');
@@ -62,12 +66,12 @@ const App = () => {
   return (
     <Router basename="/booster-social">
       <div className="c-app c-default-layout">
-        <Sidebar handleLogout={handleLogout} />
+        <Sidebar handleLogout={handleLogout} userId={userId} />
         <div className="wrapper d-flex flex-column min-vh-100 bg-light">
           <Header />
           <main className="body flex-grow-1 px-3">
             <Routes>
-              <Route path="/" element={<RequireAuth><PostGeneration accessToken={accessToken} /></RequireAuth>} />
+              <Route path="/" element={<RequireAuth><PostGeneration userId={userId} accessToken={accessToken} /></RequireAuth>} />
               <Route path="/callback" element={<LinkedInAuth onSuccess={handleLinkedInAuth} />} />
               <Route path="/login" element={<Login setAuthData={setAuthData} />} />
               <Route path="/register" element={<Register />} />

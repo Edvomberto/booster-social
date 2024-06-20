@@ -5,9 +5,11 @@ import CIcon from '@coreui/icons-react';
 import { cilSpeedometer, cilCalendar, cilAlarm, cilLayers, cilAccountLogout, cilSettings } from '@coreui/icons';
 import axios from '../axiosConfig';
 
-const Sidebar = ({ handleLogout }) => {
+const Sidebar = ({ handleLogout, userId} ) => {
   const [userInfo, setUserInfo] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [credits, setCredits] = useState(null);
+  const [subscriptionDate, setSubscriptionDate] = useState(null);
 
   const accessToken = localStorage.getItem('access_token');
 
@@ -15,8 +17,14 @@ const Sidebar = ({ handleLogout }) => {
     const fetchUserInfo = async () => {
       try {
         const response = await axios.get(`https://postlinkedin-229725447ae4.herokuapp.com/get-user-info?access_token=${accessToken}`);
-        setUserInfo(response.data);
-        console.log(response.data);
+        const userData = response.data;
+        setUserInfo(userData);
+
+        // Fetch credits and subscription date
+        const userResponse = await axios.get(`https://ws-booster-social-5040b10dd814.herokuapp.com/api/user/creditos/${userId}`);
+        const userDetails = userResponse.data;
+        setCredits(userDetails.credits);
+        setSubscriptionDate(new Date(userDetails.subscriptionDate));
       } catch (error) {
         console.error('Error fetching user info:', error);
       }
@@ -35,6 +43,11 @@ const Sidebar = ({ handleLogout }) => {
 
   const handleMouseLeave = () => {
     setIsSidebarOpen(false);
+  };
+
+  const formatDate = (date) => {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return date.toLocaleDateString(undefined, options);
   };
 
   return (
@@ -58,7 +71,13 @@ const Sidebar = ({ handleLogout }) => {
       <CSidebarFooter className="d-flex align-items-center">
         {userInfo && (
           <CPopover
-            content={userInfo.name}
+            content={
+              <div>
+                <div>{userInfo.name}</div>
+                <div>Créditos: {credits}</div>
+                <div>Renova em: {subscriptionDate ? formatDate(subscriptionDate) : 'N/A'}</div>
+              </div>
+            }
             placement="right"
             trigger={['hover', 'focus']}
           >

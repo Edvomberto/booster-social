@@ -26,6 +26,7 @@ const PostModal = ({
   toggle = () => {},
   onSave = () => {},
   post = null,
+  userId = null
 }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -96,7 +97,7 @@ const PostModal = ({
     setLoading(true);
     const qtde = 3;
     try {
-      const response = await axios.post('/post/post-ideas-llama', { subject, qtde });
+      const response = await axios.post('/post/post-ideas-llama', { userId, subject, qtde });
       setIdeas(response.data.ideas.ideas);
       setCurrentIdeaIndex(0); // Reset to the first idea
     } catch (error) {
@@ -124,11 +125,11 @@ const PostModal = ({
       try {
         let response;
         if (selectedAi === 'llama3') {
-          response = await axios.post('/post/create-post-llama', { idea: `${ideas[currentIdeaIndex].title}\n${ideas[currentIdeaIndex].summary}` });
+          response = await axios.post('/post/create-post-llama', { userId, idea: `${ideas[currentIdeaIndex].title}\n${ideas[currentIdeaIndex].summary}` });
         } else if (selectedAi === 'gpt') {
-          response = await axios.post('/post/create-post-gpt', { idea: `${ideas[currentIdeaIndex].title}\n${ideas[currentIdeaIndex].summary}` });
+          response = await axios.post('/post/create-post-gpt', { userId, idea: `${ideas[currentIdeaIndex].title}\n${ideas[currentIdeaIndex].summary}` });
         } else if (selectedAi === 'gemini') {
-          response = await axios.post('/post/create-post-gemini', { idea: `${ideas[currentIdeaIndex].title}\n${ideas[currentIdeaIndex].summary}` });
+          response = await axios.post('/post/create-post-gemini', { userId, idea: `${ideas[currentIdeaIndex].title}\n${ideas[currentIdeaIndex].summary}` });
         }
 
         const { title, content } = response.data.post;
@@ -181,8 +182,8 @@ const PostModal = ({
       setLoading(true);
       try {
         const response = selectedGenerator === 'leonardo'
-          ? await axios.post('/post/gerar-imagem-leo', { prompt: contextText, estilo: selectedStyle })
-          : await axios.post('/post/gerar-imagem', { prompt: contextText, estilo: selectedStyle });
+          ? await axios.post('/post/gerar-imagem-leo', { userId, prompt: contextText, estilo: selectedStyle })
+          : await axios.post('/post/gerar-imagem', { userId, prompt: contextText, estilo: selectedStyle });
 
         setImageUrl(response.data.imageUrl);
         addToast('Imagem gerada com sucesso!', 'success');
@@ -199,7 +200,7 @@ const PostModal = ({
     if (contentText) {
       setLoading(true);
       try {
-        const response = await axios.post('/post/gerar-titulo', { content: contentText });
+        const response = await axios.post('/post/gerar-titulo', { userId, content: contentText });
         setTitle(response.data.title);
         addToast('Título gerado com sucesso!', 'success');
       } catch (error) {
