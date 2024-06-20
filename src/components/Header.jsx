@@ -12,7 +12,7 @@ const Header = () => {
         <CIcon icon={cilMenu} height={24} />
       </CHeaderBrand>
       <CHeaderNav className="d-md-down-none mr-auto">
-        <CNavItem className="px-3">
+        <CNavItem className="px-4">
           <CNavLink to="/">Dashboard</CNavLink>
         </CNavItem>
       </CHeaderNav>

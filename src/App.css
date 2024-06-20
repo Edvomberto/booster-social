@@ -136,3 +136,30 @@ body, html, #root {
 .close-btn:hover {
   color: #ff0000;
 }
+
+
+/* src/App.css */
+.sidebar-full-height {
+  height: 100vh; /* Define a altura da sidebar para 100% da altura da tela */
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-narrow {
+  width: 60px; /* Define a largura da barra estreita */
+}
+
+.sidebar-narrow .nav-icon {
+  margin-right: 0; /* Remove margem direita para ícones na barra estreita */
+}
+
+.CSidebarFooter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.CSidebarFooter .d-flex {
+  width: 100%;
+  justify-content: center;
+}

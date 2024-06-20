@@ -16,25 +16,25 @@ import './App.css';
 
 const App = () => {
   const [accessToken, setAccessToken] = useState(localStorage.getItem('access_token') || '');
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [tokenBooster, setTokenBooster] = useState(localStorage.getItem('tokenBooster'));
 
   useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    if (tokenBooster) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${tokenBooster}`;
     } else {
       delete axios.defaults.headers.common['Authorization'];
     }
-  }, [token]);
+  }, [tokenBooster]);
 
-  const setAuthData = (token) => {
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      localStorage.setItem('token', token);
+  const setAuthData = (tokenBooster) => {
+    if (tokenBooster) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${tokenBooster}`;
+      localStorage.setItem('tokenBooster', tokenBooster);
     } else {
       delete axios.defaults.headers.common['Authorization'];
-      localStorage.removeItem('token');
+      localStorage.removeItem('tokenBooster');
     }
-    setToken(token);
+    setTokenBooster(tokenBooster);
   };
 
   const handleLogout = () => {
@@ -46,7 +46,7 @@ const App = () => {
   const RequireAuth = ({ children }) => {
     const location = useLocation();
 
-    if (!token) {
+    if (!tokenBooster) {
       return <Navigate to="/login" state={{ from: location }} />;
     }
 

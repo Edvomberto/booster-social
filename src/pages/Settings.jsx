@@ -13,7 +13,9 @@ import {
   CFormCheck,
   CFormSelect,
   CFormSwitch,
-  CButton
+  CFormRange,
+  CButton,
+  CAvatar
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilLink, cilTrash, cilReload } from '@coreui/icons';
@@ -34,7 +36,7 @@ const Settings = ({ accessToken, setAccessToken }) => {
     searchKeywords: '',
     description: '',
     mainTopics: '',
-    freedomLevel: 'Conservative',
+    freedomLevel: 0,
     aiModel: 'GPT-4'
   });
 
@@ -55,6 +57,7 @@ const Settings = ({ accessToken, setAccessToken }) => {
           ...prevSettings,
           email: response.data.email,
           name: response.data.name,
+          avatar: response.data.picture
         }));
       } catch (error) {
         console.error('Error fetching user info:', error);
@@ -125,7 +128,14 @@ const Settings = ({ accessToken, setAccessToken }) => {
                 <CFormInput type="email" name="email" value={settings.email} onChange={handleChange} />
 
                 <CFormLabel>{t('name')}</CFormLabel>
-                <CFormInput type="text" name="name" value={settings.name} readOnly />
+                <CRow className="align-items-center">
+                  <CCol xs="auto">
+                    <CAvatar src={settings.avatar} size="md" />
+                  </CCol>
+                  <CCol>
+                    <CFormInput type="text" name="name" value={settings.name} readOnly />
+                  </CCol>
+                </CRow>
 
                 <CFormLabel>{t('timezone')}</CFormLabel>
                 <CFormInput type="text" name="timezone" value={settings.timezone} onChange={handleChange} />
@@ -148,7 +158,15 @@ const Settings = ({ accessToken, setAccessToken }) => {
             <CCardBody>
               <CForm>
                 <CFormLabel>{t('connected_as')}</CFormLabel>
-                <CFormInput type="text" name="linkedIn" value={settings.linkedIn} onChange={handleChange} />
+                <CRow className="align-items-center mb-3">
+                  <CCol xs="auto">
+                    <CAvatar src={settings.avatar} size="md" />
+                  </CCol>
+                  <CCol>
+                    <CFormInput type="text" name="linkedIn" value={settings.linkedIn} onChange={handleChange} />
+                  </CCol>
+                </CRow>
+
                 {accessToken ? (
                   <CButton color="danger" className="mt-2" onClick={handleDisconnect}>
                     <CIcon icon={cilTrash} /> {t('disconnect')}
@@ -212,15 +230,25 @@ const Settings = ({ accessToken, setAccessToken }) => {
                 <CFormInput type="textarea" name="mainTopics" rows="3" value={settings.mainTopics} onChange={handleChange} />
 
                 <CFormLabel>{t('freedom_level')}</CFormLabel>
-                <CFormSelect name="freedomLevel" value={settings.freedomLevel} onChange={handleChange}>
-                  <option value="Conservative">Conservative</option>
-                  <option value="Wild">Wild</option>
-                </CFormSelect>
+                <CFormRange
+                  name="freedomLevel"
+                  value={settings.freedomLevel}
+                  onChange={handleChange}
+                  min="0"
+                  max="100"
+                />
+                <div className="d-flex justify-content-between">
+                  <span>Conservative</span>
+                  <span>Wild</span>
+                </div>
 
                 <CFormLabel>{t('ai_model')}</CFormLabel>
                 <CFormSelect name="aiModel" value={settings.aiModel} onChange={handleChange}>
+                  <option value="GPT-4o">GPT-4o</option>
                   <option value="GPT-4">GPT-4</option>
                   <option value="GPT-3.5">GPT-3.5</option>
+                  <option value="Gemini PRO">Gemini Pro</option>
+                  <option value="Llama 3">Llama 3</option>
                 </CFormSelect>
               </CForm>
             </CCardBody>
