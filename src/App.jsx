@@ -11,6 +11,8 @@ import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import LoginLinkedin from './pages/LoginLinkedin';
+import Prompt from './pages/PromptsList';
+
 import axios from './axiosConfig';
 import './App.css';
 
@@ -18,7 +20,6 @@ const App = () => {
   const [accessToken, setAccessToken] = useState(localStorage.getItem('access_token') || '');
   const [tokenBooster, setTokenBooster] = useState(localStorage.getItem('tokenBooster'));
   const [userId, setUserId] = useState(localStorage.getItem('userId'));
-
 
   useEffect(() => {
     if (tokenBooster) {
@@ -33,7 +34,6 @@ const App = () => {
       axios.defaults.headers.common['Authorization'] = `Bearer ${tokenBooster}`;
       localStorage.setItem('tokenBooster', tokenBooster);
       localStorage.setItem('userId', userId);
-
     } else {
       delete axios.defaults.headers.common['Authorization'];
       localStorage.removeItem('tokenBooster');
@@ -76,6 +76,7 @@ const App = () => {
               <Route path="/login" element={<Login setAuthData={setAuthData} />} />
               <Route path="/register" element={<Register />} />
               <Route path="/loginLinkedin" element={<LoginLinkedin />} />
+              <Route path="/prompts" element={<Prompt />} />
               <Route path="/settings" element={<RequireAuth><Settings accessToken={accessToken} setAccessToken={setAccessToken} /></RequireAuth>} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
