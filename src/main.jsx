@@ -5,12 +5,12 @@ import App from './App';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@coreui/coreui/dist/css/coreui.min.css';
 import './i18n'; // Importe o arquivo de configuração do i18next
+import { BrowserRouter } from 'react-router-dom';
 
-const container = document.getElementById('root');
-const root = createRoot(container);
-
-root.render(
+createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App />
+    <BrowserRouter basename="/booster-social">
+      <App />
+    </BrowserRouter>
   </React.StrictMode>
 );

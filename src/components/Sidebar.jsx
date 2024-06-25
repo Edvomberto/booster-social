@@ -1,11 +1,13 @@
 // src/components/Sidebar.jsx
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CSidebar, CSidebarNav, CNavItem, CSidebarHeader, CSidebarBrand, CAvatar, CSidebarFooter, CPopover, CSidebarToggler } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-import { cilSpeedometer, cilCalendar, cilAlarm, cilLayers, cilAccountLogout, cilSettings } from '@coreui/icons';
+import { cilSpeedometer, cilCalendar, cilAlarm, cilLayers, cilAccountLogout, cilSettings, cilSatelite } from '@coreui/icons';
 import axios from '../axiosConfig';
 
-const Sidebar = ({ handleLogout, userId} ) => {
+const Sidebar = ({ handleLogout, userId }) => {
+  const { t } = useTranslation();
   const [userInfo, setUserInfo] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [credits, setCredits] = useState(null);
@@ -20,7 +22,6 @@ const Sidebar = ({ handleLogout, userId} ) => {
         const userData = response.data;
         setUserInfo(userData);
 
-        // Fetch credits and subscription date
         const userResponse = await axios.get(`https://ws-booster-social-5040b10dd814.herokuapp.com/api/user/creditos/${userId}`);
         const userDetails = userResponse.data;
         setCredits(userDetails.credits);
@@ -63,10 +64,12 @@ const Sidebar = ({ handleLogout, userId} ) => {
         </CSidebarBrand>
       </CSidebarHeader>
       <CSidebarNav>
-        <CNavItem href="/"><CIcon customClassName="nav-icon" icon={cilSpeedometer} /> Dashboard</CNavItem>
-        <CNavItem href="/booster-social/settings"><CIcon customClassName="nav-icon" icon={cilCalendar} /> Schedules </CNavItem>
-        <CNavItem href="/"><CIcon customClassName="nav-icon" icon={cilAlarm} /> Alerts</CNavItem>
-        <CNavItem href="/booster-social/settings"><CIcon customClassName="nav-icon" icon={cilSettings} /> Settings</CNavItem>
+        <CNavItem href="/"><CIcon customClassName="nav-icon" icon={cilSpeedometer} /> {t('dashboard')}</CNavItem>
+        <CNavItem href="/booster-social/settings"><CIcon customClassName="nav-icon" icon={cilCalendar} /> {t('schedules')}</CNavItem>
+        <CNavItem href="/"><CIcon customClassName="nav-icon" icon={cilAlarm} /> {t('alerts')}</CNavItem>
+        <CNavItem href="/booster-social/settings"><CIcon customClassName="nav-icon" icon={cilSettings} /> {t('settings')}</CNavItem>
+        <CNavItem href="/booster-social/carrossel"><CIcon customClassName="nav-icon" icon={cilSatelite} /> {t('carousel')}</CNavItem>
+
       </CSidebarNav>
       <CSidebarFooter className="d-flex align-items-center">
         {userInfo && (
@@ -74,8 +77,8 @@ const Sidebar = ({ handleLogout, userId} ) => {
             content={
               <div>
                 <div>{userInfo.name}</div>
-                <div>Créditos: {credits}</div>
-                <div>Renova em: {subscriptionDate ? formatDate(subscriptionDate) : 'N/A'}</div>
+                <div>{t('credits')}: {credits}</div>
+                <div>{t('renew_in')}: {subscriptionDate ? formatDate(subscriptionDate) : t('no_subscription_date')}</div>
               </div>
             }
             placement="right"
@@ -88,8 +91,9 @@ const Sidebar = ({ handleLogout, userId} ) => {
         )}
       </CSidebarFooter>
       <CSidebarHeader className="border-top">
-        <CSidebarToggler onClick={handleLogout} />
+          <CIcon onClick={handleLogout} customClassName="nav-icon" icon={cilAccountLogout} cursor="hand"/>
       </CSidebarHeader>
+      
     </CSidebar>
   );
 };

@@ -1,4 +1,3 @@
-// src/pages/Settings.jsx
 import React, { useState, useEffect } from 'react';
 import {
   CContainer,
@@ -68,7 +67,12 @@ const Settings = ({ accessToken, setAccessToken }) => {
     if (accessToken) {
       fetchUserInfo();
     }
-  }, [accessToken]);
+
+    const savedLanguage = localStorage.getItem('language');
+    if (savedLanguage) {
+      i18n.changeLanguage(savedLanguage);
+    }
+  }, [accessToken, i18n]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -81,6 +85,7 @@ const Settings = ({ accessToken, setAccessToken }) => {
   const handleLanguageChange = (e) => {
     const newLanguage = e.target.value;
     i18n.changeLanguage(newLanguage);
+    localStorage.setItem('language', newLanguage); // Armazena o idioma selecionado no localStorage
     setSettings(prevSettings => ({
       ...prevSettings,
       language: newLanguage
@@ -97,9 +102,7 @@ const Settings = ({ accessToken, setAccessToken }) => {
   };
 
   const handleLinkedInRefresh = async () => {
-    // Implement the refresh logic here
     console.log('LinkedIn refresh clicked');
-    // Add any necessary logic to refresh LinkedIn information
   };
 
   const handleDisconnect = () => {
@@ -218,6 +221,7 @@ const Settings = ({ accessToken, setAccessToken }) => {
                 <CFormSelect name="language" value={settings.language} onChange={handleLanguageChange}>
                   <option value="pt">🇵🇹 Portuguese</option>
                   <option value="en">🇬🇧 English</option>
+                  <option value="es">🇪🇸 Spanish</option>
                 </CFormSelect>
 
                 <CFormLabel>{t('search_keywords')}</CFormLabel>
@@ -237,10 +241,7 @@ const Settings = ({ accessToken, setAccessToken }) => {
                   min="0"
                   max="100"
                 />
-                <div className="d-flex justify-content-between">
-                  <span>Conservative</span>
-                  <span>Wild</span>
-                </div>
+
 
                 <CFormLabel>{t('ai_model')}</CFormLabel>
                 <CFormSelect name="aiModel" value={settings.aiModel} onChange={handleChange}>
@@ -255,7 +256,7 @@ const Settings = ({ accessToken, setAccessToken }) => {
           </CCard>
         </CCol>
       </CRow>
-      <CButton color="primary" onClick={handleSubmit} className="mt-4">Save Settings</CButton>
+      <CButton color="primary" onClick={handleSubmit} className="mt-4">{t('Save_Settings')}</CButton>
     </CContainer>
   );
 };

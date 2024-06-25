@@ -1,18 +1,17 @@
 // src/App.jsx
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
+import { Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import PostGeneration from './pages/PostGeneration';
 import LinkedInAuth from './pages/LinkedInAuth';
 import Settings from './pages/Settings';
 import '@coreui/coreui/dist/css/coreui.min.css';
 import Header from './components/Header';
-import Footer from './components/Footer';
 import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import LoginLinkedin from './pages/LoginLinkedin';
 import Prompt from './pages/PromptsList';
-
+import Carrossel from './pages/Carrossel';
 import axios from './axiosConfig';
 import './App.css';
 
@@ -64,27 +63,25 @@ const App = () => {
   };
 
   return (
-    <Router basename="/booster-social">
-      <div className="c-app c-default-layout">
-        <Sidebar handleLogout={handleLogout} userId={userId} />
-        <div className="wrapper d-flex flex-column min-vh-100 bg-light">
-          <Header />
-          <main className="body flex-grow-1 px-3">
-            <Routes>
-              <Route path="/" element={<RequireAuth><PostGeneration userId={userId} accessToken={accessToken} /></RequireAuth>} />
-              <Route path="/callback" element={<LinkedInAuth onSuccess={handleLinkedInAuth} />} />
-              <Route path="/login" element={<Login setAuthData={setAuthData} />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/loginLinkedin" element={<LoginLinkedin />} />
-              <Route path="/prompts" element={<Prompt />} />
-              <Route path="/settings" element={<RequireAuth><Settings accessToken={accessToken} setAccessToken={setAccessToken} /></RequireAuth>} />
-              <Route path="*" element={<Navigate to="/" />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
+    <div className="c-app c-default-layout">
+      {tokenBooster && <Sidebar handleLogout={handleLogout} userId={userId} />}
+      <div className={`wrapper d-flex flex-column min-vh-100 ${tokenBooster ? 'bg-light' : ''}`}>
+        {tokenBooster && <Header />}
+        <main className={`body flex-grow-1 px-3 ${tokenBooster ? '' : 'd-flex align-items-center justify-content-center'}`}>
+          <Routes>
+            <Route path="/" element={<RequireAuth><PostGeneration userId={userId} accessToken={accessToken} /></RequireAuth>} />
+            <Route path="/callback" element={<LinkedInAuth onSuccess={handleLinkedInAuth} />} />
+            <Route path="/login" element={<Login setAuthData={setAuthData} />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/loginLinkedin" element={<LoginLinkedin />} />
+            <Route path="/prompts" element={<Prompt />} />
+            <Route path="/carrossel" element={<Carrossel accessToken={accessToken} userId={userId}/>} />
+            <Route path="/settings" element={<RequireAuth><Settings accessToken={accessToken} setAccessToken={setAccessToken} /></RequireAuth>} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </main>
       </div>
-    </Router>
+    </div>
   );
 };
 

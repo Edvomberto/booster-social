@@ -14,6 +14,7 @@ import {
   CToastBody,
   CToastHeader
 } from '@coreui/react';
+import { useTranslation } from 'react-i18next';
 import PostModal from './PostModal';
 import axios from '../axiosConfig';
 import './PostGeneration.css';
@@ -24,22 +25,22 @@ const initialData = {
   columns: {
     'column-0': {
       id: 'column-0',
-      title: 'Ideias',
+      title: 'ideas_column',
       taskIds: [],
     },
     'column-1': {
       id: 'column-1',
-      title: 'Rascunho',
+      title: 'sketch_column',
       taskIds: [],
     },
     'column-2': {
       id: 'column-2',
-      title: 'Agendando',
+      title: 'scheduling_column',
       taskIds: [],
     },
     'column-3': {
       id: 'column-3',
-      title: 'Postado',
+      title: 'posted_column',
       taskIds: [],
     },
   },
@@ -73,6 +74,7 @@ const truncateHtml = (html, maxLines = 2) => {
 };
 
 function PostGeneration({ accessToken, userId }) {
+  const { t, i18n } = useTranslation();
   const [data, setData] = useState(initialData);
   const [modalOpen, setModalOpen] = useState(false);
   const [currentPost, setCurrentPost] = useState(null);
@@ -90,22 +92,22 @@ function PostGeneration({ accessToken, userId }) {
       const columns = {
         'column-0': {
           id: 'column-0',
-          title: 'Ideias',
+          title: 'ideas_column',
           taskIds: [],
         },
         'column-1': {
           id: 'column-1',
-          title: 'Rascunho',
+          title: 'sketch_column',
           taskIds: [],
         },
         'column-2': {
           id: 'column-2',
-          title: 'Agendando',
+          title: 'scheduling_column',
           taskIds: [],
         },
         'column-3': {
           id: 'column-3',
-          title: 'Postado',
+          title: 'posted_column',
           taskIds: [],
         },
       };
@@ -120,6 +122,11 @@ function PostGeneration({ accessToken, userId }) {
 
       setData({ tasks, columns, columnOrder: ['column-0', 'column-1', 'column-2', 'column-3'] });
     };
+
+    const savedLanguage = localStorage.getItem('language');
+    if (savedLanguage) {
+      i18n.changeLanguage(savedLanguage);
+    }
 
     fetchData();
   }, []);
@@ -213,13 +220,13 @@ function PostGeneration({ accessToken, userId }) {
       if (currentPost) {
         response = await axios.put(`/post/posts/${currentPost.id.replace('task-', '')}`, formData, {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            'Content-Type': 'multipart-form-data',
           },
         });
       } else {
         response = await axios.post('/post/posts', formData, {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            'Content-Type': 'multipart-form-data',
           },
         });
       }
@@ -262,10 +269,10 @@ function PostGeneration({ accessToken, userId }) {
       });
 
       toggleModal();
-      addToast('Post publicado!', 'success');
+      addToast(t('post_published'), 'success');
     } catch (error) {
       console.error('Erro ao publicar post:', error);
-      addToast('Erro ao publicar post.', 'danger');
+      addToast(t('error_publishing_post'), 'danger');
     }
   };
 
@@ -290,6 +297,7 @@ function PostGeneration({ accessToken, userId }) {
       setData(newState);
     } catch (error) {
       console.error('Erro ao excluir post:', error);
+      addToast(t('error_deleting_post'), 'danger');
     }
   };
 
@@ -306,7 +314,7 @@ function PostGeneration({ accessToken, userId }) {
 
       const response = await axios.post('/post/posts', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'multipart-form-data',
         },
       });
 
@@ -339,10 +347,10 @@ function PostGeneration({ accessToken, userId }) {
         },
       });
 
-      addToast('Post duplicado!', 'success');
+      addToast(t('post_duplicated'), 'success');
     } catch (error) {
       console.error('Erro ao duplicar post:', error);
-      addToast('Erro ao duplicar post.', 'danger');
+      addToast(t('error_duplicating_post'), 'danger');
     }
   };
 
@@ -372,7 +380,7 @@ function PostGeneration({ accessToken, userId }) {
                   <CCol md="3">
                     <CCard className="column" {...provided.droppableProps} ref={provided.innerRef}>
                       <CCardHeader className="header-column">
-                        {column.title}
+                        {t(column.title)}
                       </CCardHeader>
                       <CCardBody className="column-body">
                         {tasks.map((task, index) => (
@@ -396,7 +404,7 @@ function PostGeneration({ accessToken, userId }) {
                                     handleDeletePost(task.id, column.id);
                                   }}
                                 >
-                                  Excluir
+                                  {t('delete_post')}
                                 </CButton>
                                 <CButton
                                   color="info"
@@ -407,7 +415,7 @@ function PostGeneration({ accessToken, userId }) {
                                     handleDuplicatePost(task.id, column.id);
                                   }}
                                 >
-                                  Duplicar
+                                  {t('duplicate_post')}
                                 </CButton>
                               </div>
                             )}
@@ -420,7 +428,7 @@ function PostGeneration({ accessToken, userId }) {
                           className="add-post-button"
                           onClick={() => handleAddPostClick(column.id)}
                         >
-                          + Adicionar Post
+                          {t('add_post')}
                         </CButton>
                       </div>
                     </CCard>
@@ -443,7 +451,7 @@ function PostGeneration({ accessToken, userId }) {
         {toasts.map((toast, index) => (
           <CToast key={index} autohide={true} visible={true} color={toast.color}>
             <CToastHeader closeButton>
-              <strong className="me-auto">Notificação</strong>
+              <strong className="me-auto">{t('notification')}</strong>
             </CToastHeader>
             <CToastBody>{toast.message}</CToastBody>
           </CToast>

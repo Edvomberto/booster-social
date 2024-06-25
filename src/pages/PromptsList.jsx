@@ -118,8 +118,7 @@ const PromptsList = () => {
             <CTableRow key={prompt.id} className="table-row">
               <CTableHeaderCell scope="row" className="align-content-center text-center">{index + 1}</CTableHeaderCell>
               <CTableDataCell>{prompt.action}</CTableDataCell>
-
-              <CTableDataCell>{prompt.promptText}</CTableDataCell>
+              <CTableDataCell dangerouslySetInnerHTML={{ __html: prompt.promptText }}></CTableDataCell>
               <CTableDataCell className="align-content-center text-center">
                 <CButton onClick={() => openEditModal(prompt)} color="info" className="action-button">
                   <CIcon icon={cilPen} className="text-light" />

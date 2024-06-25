@@ -1,0 +1,38 @@
+.containerBack {
+  width: 448px;
+  height: 568px;
+  border: 1px solid #ccc;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: left;
+  position: relative;
+}
+
+.containerRef {
+  display: flex;
+  flex-direction: column;
+  grid-row: 1 / 3;
+  gap: 0.835714rem;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  justify-content: center;
+  position:relative;
+  height: 500px;
+}
+  
+.highlightable-div {
+  padding: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: inline-block;
+  width: fit-content;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.highlightable-div.selected {
+  border-color: rgb(234, 25, 136); /* Cor da borda destacada */
+  box-shadow: 0 0 10px rgb(113, 27, 86); /* Efeito de desfoque na borda */
+}

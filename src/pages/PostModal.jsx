@@ -17,17 +17,14 @@ import {
 } from 'reactstrap';
 import './PostGeneration.css';
 import axios from '../axiosConfig';
+import { useTranslation } from 'react-i18next';
 import { CToast, CToastBody, CToastHeader, CToaster, CButtonGroup, CFormCheck } from '@coreui/react';
 import '@fortawesome/fontawesome-free/css/all.min.css';
-import FadeWrapper from '../components/FadeWrapper'; // Importando o wrapper
+import './PostModal.css'; // Certifique-se de importar o arquivo de estilos
 
-const PostModal = ({
-  isOpen = false,
-  toggle = () => {},
-  onSave = () => {},
-  post = null,
-  userId = null
-}) => {
+
+const PostModal = ({ isOpen = false, toggle = () => { }, onSave = () => { }, post = null, userId = null }) => {
+  const { t, i18n } = useTranslation();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [imageUrl, setImageUrl] = useState('');
@@ -52,7 +49,12 @@ const PostModal = ({
       setContent('');
       setImageUrl('');
     }
+    const savedLanguage = localStorage.getItem('language');
+    if (savedLanguage) {
+      i18n.changeLanguage(savedLanguage);
+    }
   }, [post]);
+
 
   const addToast = (message, color) => {
     setToasts([...toasts, { message, color }]);
@@ -81,15 +83,15 @@ const PostModal = ({
     const formData = new FormData();
     formData.append('image', file);
 
-    axios.post('/upload', formData)
+    axios.post('/post/upload', formData)
       .then(response => {
         const imageUrl = axios.defaults.baseURL + response.data.url;
         setImageUrl(imageUrl);
-        addToast('Imagem carregada com sucesso!', 'success');
+        addToast(t('image_upload_success'), 'success');
       })
       .catch(error => {
         console.error('Erro ao fazer upload da imagem:', error);
-        addToast('Erro ao fazer upload da imagem!', 'warning');
+        addToast(t('image_upload_error'), 'warning');
       });
   };
 
@@ -135,10 +137,10 @@ const PostModal = ({
         const { title, content } = response.data.post;
         setTitle(title);
         setContent(content);
-        addToast('Post gerado com sucesso!', 'success');
+        addToast(t('post_generated_success'), 'success');
       } catch (error) {
         console.error('Error generating post:', error);
-        addToast('Erro ao gerar o post!', 'warning');
+        addToast(t('post_generated_error'), 'warning');
       }
       setLoading(false);
     }
@@ -149,7 +151,7 @@ const PostModal = ({
 
     const storedAccessToken = localStorage.getItem('access_token') || accessToken;
     if (!storedAccessToken) {
-      addToast('Faça login no LinkedIn primeiro.', 'warning');
+      addToast(t('login_linkedin_warning'), 'warning');
       setLoading(false);
       window.location.href = '/loginLinkedin'; // Redirecionar para a página de login
       return;
@@ -167,10 +169,10 @@ const PostModal = ({
           'Content-Type': 'application/json',
         },
       });
-      addToast('Post publicado no LinkedIn com sucesso!', 'success');
+      addToast(t('linkedin_post_success'), 'success');
     } catch (error) {
       console.error('Erro ao postar no LinkedIn:', error);
-      addToast('Erro ao postar no LinkedIn.', 'warning');
+      addToast(t('linkedin_post_error'), 'warning');
     }
     setLoading(false);
     toggle();
@@ -186,10 +188,10 @@ const PostModal = ({
           : await axios.post('/post/gerar-imagem', { userId, prompt: contextText, estilo: selectedStyle });
 
         setImageUrl(response.data.imageUrl);
-        addToast('Imagem gerada com sucesso!', 'success');
+        addToast(t('image_upload_success'), 'success');
       } catch (error) {
         console.error('Error generating image:', error);
-        addToast('Erro ao tentar gerar a imagem!', 'warning');
+        addToast(t('image_upload_error'), 'warning');
       }
       setLoading(false);
     }
@@ -202,10 +204,10 @@ const PostModal = ({
       try {
         const response = await axios.post('/post/gerar-titulo', { userId, content: contentText });
         setTitle(response.data.title);
-        addToast('Título gerado com sucesso!', 'success');
+        addToast(t('title_generated_success'), 'success');
       } catch (error) {
         console.error('Error generating title:', error);
-        addToast('Erro ao gerar o título!', 'warning');
+        addToast(t('title_generated_error'), 'warning');
       }
       setLoading(false);
     }
@@ -227,36 +229,37 @@ const PostModal = ({
   return (
     <Modal isOpen={isOpen} toggle={toggle} className="modal-lg-custom">
       <ModalHeader toggle={toggle}>
-        {post ? 'Editar Post' : 'Adicionar Post'}
+        {post ? t('edit_post') : t('add_post')}
       </ModalHeader>
       <ModalBody>
         <Row>
           <Col md="3">
-            <FormGroup>
-              <Label for="subject">Assunto</Label>
-              <Input
-                type="text"
-                name="subject"
-                id="subject"
-                placeholder="Informe o assunto para obter ideias de post"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                className="mt-2"
-              />
-            </FormGroup>
-            <FormGroup>
-              <Button color="primary" onClick={handleGetPostIdeas} disabled={loading}>
-                {loading ? <Spinner size="sm" /> : 'Ideias de Post'}
-              </Button>
-            </FormGroup>
+          <FormGroup>
+              <Label for="subject">{t('subject')}</Label>
+              <InputGroup className="input-group-title">
+                <Input
+                  type="text"
+                  name="subject"
+                  id="subject"
+                  placeholder={t('post_ideas')}
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                />
+                <InputGroupText>
+                  <Button id="btGeraIdeias" color="warning" onClick={handleGetPostIdeas} disabled={loading}>
+                    {loading ? <Spinner size="sm" /> : <i className="fa fa-bolt"></i>}
+                  </Button>
+                </InputGroupText>
+              </InputGroup>
+            </FormGroup>          
             <FormGroup>
               <textarea
                 id="ideas"
                 value={currentIdea}
                 onChange={handleIdeaChange}
-                placeholder="O conteúdo do post aparecerá aqui"
+                placeholder={t('post_content_placeholder')}
                 className="chakra-textarea css-ydh6re"
-                rows="5"
+                rows="10"
                 style={{ width: '100%' }}
               />
               <div className="d-flex justify-content-between mt-2">
@@ -265,30 +268,24 @@ const PostModal = ({
                   disabled={currentIdeaIndex === 0}
                   className="btn-sm btn-secondary"
                 >
-                  <span className="chakra-button__icon">
-                    <svg viewBox="0 0 24 24" focusable="false" className="chakra-icon" aria-hidden="true">
-                      <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path>
-                    </svg>
+                  <span className="chakra-button__icon me-2">
+                    <i className="fa-solid fa-arrow-left"></i>
                   </span>
-                  Prev
+                  {t('prev')}
                 </Button>
                 <Button
                   onClick={handleNextIdea}
                   disabled={currentIdeaIndex === ideas.length - 1}
                   className="btn-sm btn-secondary"
                 >
-                  Next
-                  <span className="chakra-button__icon">
-                    <svg viewBox="0 0 24 24" focusable="false" className="chakra-icon" aria-hidden="true">
-                      <path fill="currentColor" d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"></path>
-                    </svg>
+                  {t('next')}
+                  <span className="chakra-button__icon ms-2">
+                    <i className="fa-solid fa-arrow-right"></i>
                   </span>
                 </Button>
               </div>
+
               <div className="mt-2">
-                <Button color="success" onClick={handleGeneratePost} disabled={loading}>
-                  {loading ? <Spinner size="sm" /> : 'Gerar Post'}
-                </Button>
                 <FormGroup>
                   <CButtonGroup role="group" aria-label="Basic radio toggle button group">
                     <CFormCheck
@@ -323,12 +320,15 @@ const PostModal = ({
                     />
                   </CButtonGroup>
                 </FormGroup>
+                <Button color="warning" onClick={handleGeneratePost} disabled={loading}>
+                  {loading ? <Spinner size="sm" /> : t('generate_post')}
+                </Button>
               </div>
             </FormGroup>
           </Col>
           <Col md="4">
             <FormGroup>
-              <Label for="title">Título</Label>
+              <Label for="title">{t('title')}</Label>
               <InputGroup className="input-group-title">
                 <Input
                   type="text"
@@ -345,19 +345,17 @@ const PostModal = ({
               </InputGroup>
             </FormGroup>
             <FormGroup>
-              <Label for="content">Conteúdo</Label>
               <textarea
                 id="content"
                 value={content}
                 onChange={handleContentChange}
-                placeholder="Digite o conteúdo do post aqui"
+                placeholder={t('post_content_placeholder')}
                 className="chakra-textarea css-ydh6re"
                 rows="10"
                 style={{ width: '100%' }}
               />
             </FormGroup>
             <FormGroup>
-              <Label for="image">Imagem</Label>
               <Input
                 type="file"
                 name="image"
@@ -379,7 +377,7 @@ const PostModal = ({
                   value={selectedStyle}
                   onChange={(e) => setSelectedStyle(e.target.value)}
                 >
-                  <option value="">Selecione um estilo</option>
+                  <option value="">{t('select_style')}</option>
                   <option value="vangogh">Van Gogh</option>
                   <option value="pixel">Pixel</option>
                   <option value="300">300</option>
@@ -439,15 +437,15 @@ const PostModal = ({
         </Row>
       </ModalBody>
       <ModalFooter>
-        <Button color="primary" onClick={handleSave}>{post ? 'Salvar' : 'Adicionar'}</Button>
-        <Button color="success" onClick={handlePostToLinkedIn}>Postar</Button>
-        <Button color="secondary" onClick={toggle}>Cancelar</Button>
+        <Button color="primary" onClick={handleSave}>{post ? t('save') : t('add')}</Button>
+        <Button color="success" onClick={handlePostToLinkedIn}>{t('post')}</Button>
+        <Button color="secondary" onClick={toggle}>{t('cancel')}</Button>
       </ModalFooter>
       <CToaster position="top-right">
         {toasts.map((toast, index) => (
           <CToast key={index} autohide={true} visible={true} color={toast.color}>
             <CToastHeader closeButton>
-              <strong className="me-auto">Notificação</strong>
+              <strong className="me-auto">{t('notification')}</strong>
             </CToastHeader>
             <CToastBody>{toast.message}</CToastBody>
           </CToast>

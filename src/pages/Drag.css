@@ -1,0 +1,40 @@
+.App {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+}
+
+.dropzone {
+    display: flex;
+    gap: 10px;
+}
+
+.draggable {
+    margin-top: 15px;
+    padding-top: 10px;
+    width: 100px;
+    height: 130px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    color: white;
+    cursor: grab;
+    border: 1px solid #ccc;
+    position: relative; /* Adicionado para posicionamento do botão */
+}
+
+.delete-button {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: none;
+    border: none;
+    color: red;
+    font-size: 12px;
+    padding: 0;
+    cursor: pointer;
+    z-index: 1001;
+}
