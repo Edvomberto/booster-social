@@ -3,19 +3,19 @@ import Draggable from 'react-draggable';
 import {
   CContainer, CButton, CFormInput, CNav, CNavItem, CNavLink, CTabContent, CTabPane,
   CFormSelect, CFormCheck, CCard, CCardBody, CCardTitle, CCardText, CImage,
-  CRow, CCol, CFormLabel, CFormTextarea, CForm, CTabs, CTabList, CTab, CTabPanel, CFormRange
+  CRow, CCol, CFormLabel, CFormTextarea, CForm, CTabs, CTabList, CTab, CTabPanel, CFormRange, CInputGroup, CInputGroupText
 } from '@coreui/react';
-import {
-  Input, Button, FormGroup, InputGroup, InputGroupText,
-} from 'reactstrap';
 import CIcon from '@coreui/icons-react';
-import { cilSave, cilCloudDownload, cilPlus, cilTrash, cilPencil } from '@coreui/icons';
+import { cilSave, cilCloudDownload, cilTrash, cilPencil } from '@coreui/icons';
 import * as htmlToImage from 'html-to-image';
+import { toPng } from 'html-to-image';
+import jsPDF from 'jspdf';
 import axios from '../axiosConfig';
 import '../components/Highlight.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import MiniatureDragDrop from './MiniatureDragDrop';
-import PaletteSelector from '../components/PaletteSelector';
+import PaletteSelector from '../components/PalleteSelector';
+import PreviewModal from './PreviewModal';
 
 function Carrossel({ accessToken, userId }) {
   const [carousels, setCarousels] = useState([]);
@@ -53,6 +53,10 @@ function Carrossel({ accessToken, userId }) {
   const [palette, setPalette] = useState(['#5567C9', '#C3C5F5', '#F8F9FD']);
   const [userInfo, setUserInfo] = useState(null);
   const [selectedDiv, setSelectedDiv] = useState(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [postText, setPostText] = useState('');
+  const [pdf, setPdf] = useState(null);
+  const [pngImages, setPngImages] = useState([]);
 
   const previewRef = useRef(null);
   const previewBack = useRef(null);
@@ -119,9 +123,31 @@ function Carrossel({ accessToken, userId }) {
     updateThumbnail(currentPageIndex, newCarouselItems);
   };
 
+  const generatePngImages = async () => {
+    const images = [];
+
+    for (const [index, item] of carouselItems.entries()) {
+      const element = previewBack.current;
+      if (element) {
+        console.log(`Rendering item ${index}...`);
+        setCurrentPageIndex(index);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for rendering
+
+        const imgData = await toPng(element, { quality: 1 });
+        images.push(imgData);
+      }
+    }
+    setPngImages(images);
+    setShowPreviewModal(true);
+
+  };
+
   const handlePaletteSelect = (selectedPalette) => {
     setPalette(selectedPalette);
     updateSVGColor(selectedPalette); // Update SVG color when palette is selected
+    if (carouselItems.length > 0) {
+      carouselItems.forEach((_, index) => updateThumbnail(index, carouselItems, selectedPalette));
+    }
   };
 
   const updateSVGColor = (palette) => {
@@ -205,12 +231,43 @@ function Carrossel({ accessToken, userId }) {
     }
   };
 
-  const deleteCarousel = async (id) => {
+  const generatePDF = async () => {
     try {
-      await axios.delete(`/carrossel/carrossel/${id}`);
-      console.log('Carousel deleted');
+      const doc = new jsPDF();
+      console.log('Generating PDF...');
+
+      for (const [index, item] of carouselItems.entries()) {
+        const element = previewBack.current;
+        if (element) {
+          console.log(`Rendering item ${index}...`);
+          setCurrentPageIndex(index);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for rendering
+
+          const imgData = await toPng(element, { quality: 1 });
+          if (index > 0) doc.addPage();
+          doc.addImage(imgData, 'PNG', 10, 10, 190, 270);
+        }
+      }
+      const pdfBlob = doc.output('blob');
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      console.log('PDF generated:', pdfUrl);
+
+      setPdf(pdfUrl);
+      setShowPreviewModal(true);
     } catch (error) {
-      console.error('Error deleting carousel:', error);
+      console.error('Error generating PDF:', error);
+    }
+  };
+
+  const deleteCarousel = async (id) => {
+    if (window.confirm('Tem certeza de que deseja excluir este carrossel?')) {
+      try {
+        await axios.delete(`/carrossel/carrossel/${id}`);
+        console.log('Carousel deleted');
+        setCarousels(carousels.filter(carousel => carousel.id !== id));
+      } catch (error) {
+        console.error('Error deleting carousel:', error);
+      }
     }
   };
 
@@ -218,7 +275,7 @@ function Carrossel({ accessToken, userId }) {
     if (previewBack.current === null) {
       return;
     }
-    htmlToImage.toPng(previewBack.current)
+    toPng(previewBack.current)
       .then((dataUrl) => {
         const link = document.createElement('a');
         link.download = 'carousel.png';
@@ -254,6 +311,7 @@ function Carrossel({ accessToken, userId }) {
       setShowLinkedinHandle(fetchedCarousel.showLinkedinHandle);
       setShowSlideNumber(fetchedCarousel.showSlideNumber);
       setUseCustomColors(fetchedCarousel.backGroundTheme);
+      setPalette(fetchedCarousel.palette || ['#5567C9', '#C3C5F5', '#F8F9FD']);
 
       const items = fetchedCarousel.CarrosselItems.map(item => ({
         id: Date.now() + Math.random(),
@@ -268,8 +326,8 @@ function Carrossel({ accessToken, userId }) {
       setCarouselItems(items);
       setCurrentPageIndex(0); // Start with the first item in edit mode
 
-      // Generate thumbnails for all items
-      items.forEach((_, index) => updateThumbnail(index, items));
+      // Generate thumbnails for all items with correct palette
+      items.forEach((_, index) => updateThumbnail(index, items, fetchedCarousel.palette || ['#5567C9', '#C3C5F5', '#F8F9FD']));
     } catch (error) {
       console.error('Error fetching carousel data:', error);
     }
@@ -309,31 +367,56 @@ function Carrossel({ accessToken, userId }) {
         };
       });
 
-      setCarouselItems((prevItems) => {
-        const updatedItems = [...prevItems, ...newSlides];
-        // Generate thumbnails for all new slides
-        newSlides.forEach((_, index) => updateThumbnail(index + prevItems.length, updatedItems));
-        return updatedItems;
-      });
+      // Clear previous pages and set new ones
+      setCarouselItems(newSlides);
+      setCurrentPageIndex(0);
 
+      // Generate thumbnails for all new slides
+      newSlides.forEach((_, index) => updateThumbnail(index, newSlides));
     } catch (error) {
       console.error('Error generating title:', error);
     }
   };
 
-  const updateThumbnail = async (index, items) => {
+  const updateThumbnail = async (index, items, selectedPalette) => {
     const element = previewBack.current;
+    const paletteToUse = selectedPalette || palette;
+
     if (element && items[index]) {
+      // Temporarily update the previewBack with the palette for thumbnail generation
+      updateSVGColor(paletteToUse);
+
       const dataUrl = await createThumbnail(element);
       const newCarouselItems = [...items];
       newCarouselItems[index].thumbnail = dataUrl;
       setCarouselItems(newCarouselItems);
+
+      // Restore the original palette
+      updateSVGColor(palette);
     }
   };
 
   const createThumbnail = async (element) => {
     const dataUrl = await htmlToImage.toPng(element);
     return dataUrl;
+  };
+
+  const fetchPostText = async () => {
+    try {
+      const response = await axios.get(`/carrossel/generatePostText`);
+      setPostText(response.data.text);
+    } catch (error) {
+      console.error('Error fetching post text:', error);
+    }
+  };
+
+  const postToLinkedIn = async () => {
+    try {
+      await axios.post(`/carrossel/postToLinkedIn`, { text: postText, carouselItems });
+      console.log('Post successfully published to LinkedIn');
+    } catch (error) {
+      console.error('Error posting to LinkedIn:', error);
+    }
   };
 
   useEffect(() => {
@@ -366,6 +449,12 @@ function Carrossel({ accessToken, userId }) {
     updateSVGColor(palette); // Initial SVG color update when component mounts
   }, [backgroundDesign, palette]);
 
+  useEffect(() => {
+    if (carouselItems.length > 0) {
+      carouselItems.forEach((_, index) => updateThumbnail(index, carouselItems));
+    }
+  }, [backgroundDesign, palette]);
+
   const handleDragStop = (e, data, type) => {
     const newCarouselItems = [...carouselItems];
     if (type === 'image') {
@@ -381,7 +470,6 @@ function Carrossel({ accessToken, userId }) {
 
   return (
     <CContainer className="p-10" onClick={handleContainerClick}>
-
       <CNav variant="tabs">
         <CNavItem>
           <CNavLink
@@ -402,27 +490,34 @@ function Carrossel({ accessToken, userId }) {
       </CNav>
       <CTabContent activeTab={activeTab}>
         <CTabPane visible={activeTab === 0}>
-          <CRow className="mt-1" >
-            <FormGroup>
-              <InputGroup className="input-group-title" md={10}>
-                <CFormSelect id="origemId" value={textFontWeight} onChange={(e) => setTextFontWeight(e.target.value)}>
-                  <option value="url">URL</option>
-                  <option value="youtube">Youtube</option>
-                  <option value="ai">AI</option>
-                </CFormSelect>
-                <Input
+          <CRow className="mt-2">
+            <CCol md="auto">
+              <CFormSelect id="origemId" value={textFontWeight} onChange={(e) => setTextFontWeight(e.target.value)}>
+                <option value="url">URL</option>
+                <option value="youtube">Youtube</option>
+                <option value="ai">AI</option>
+              </CFormSelect>
+            </CCol>
+            <CCol md={9}>
+              <CInputGroup>
+                <CFormInput
                   type="text"
                   name="title"
                   id="origem"
-                  width="200px"
                 />
-                <InputGroupText>
-                  <Button id="btGeraTitulo" color="warning" onClick={handleGenerateTitle}>
+                <CInputGroupText>
+                  <CButton id="btGeraTitulo" color="warning" onClick={handleGenerateTitle} >
                     <i className="fa fa-bolt"></i>
-                  </Button>
-                </InputGroupText>
-              </InputGroup>
-            </FormGroup>
+                  </CButton>
+                </CInputGroupText>
+              </CInputGroup>
+            </CCol>
+            <CCol md="auto" className="d-flex align-items-center">
+              <CButton id="btGeraPreview" color="warning" onClick={generatePngImages} style={{ width: '100px' }}>
+                <span>Preview</span>
+                <i className="fa fa-bolt"></i>
+              </CButton>
+            </CCol>
           </CRow>
           <CRow className="mt-1">
             <CCol md={5}>
@@ -455,7 +550,6 @@ function Carrossel({ accessToken, userId }) {
                   </div>
                 </div>
               </div>
-
             </CCol>
             <CCol md={6}>
               <CTabs activeItemKey="profile">
@@ -463,7 +557,6 @@ function Carrossel({ accessToken, userId }) {
                   <CTab itemKey="home">Content</CTab>
                   <CTab itemKey="profile">Settings</CTab>
                   <CTab itemKey="contact">Theme</CTab>
-                  <CTab itemKey="preview">Preview</CTab>
                 </CTabList>
                 <CTabContent>
                   <CTabPanel className="p-3" itemKey="home">
@@ -587,7 +680,6 @@ function Carrossel({ accessToken, userId }) {
                               </CFormSelect>
                             </div>
                           </div>
-
                           <div className="mb-3">
                             <CFormLabel htmlFor="fontSize">Font Size</CFormLabel>
                             <CFormSelect id="fontSize" value={fontSize} onChange={(e) => setFontSize(e.target.value)}>
@@ -667,11 +759,33 @@ function Carrossel({ accessToken, userId }) {
                       </CCardBody>
                     </CCard>
                   </CTabPanel>
-                  <CTabPanel className="p-3" itemKey="disabled">
-                    Disabled tab content
-                  </CTabPanel>
                 </CTabContent>
               </CTabs>
+            </CCol>
+          </CRow>
+          <CRow className='mt-8'>
+            <MiniatureDragDrop
+              carouselItems={carouselItems}
+              setCarouselItems={setCarouselItems}
+              setCurrentPageIndex={setCurrentPageIndex}
+              handleAddItem={handleAddItem}
+              handleDeleteItem={handleDeleteItem}
+              titleFont={titleFont}
+              titleFontWeight={titleFontWeight}
+              palette={palette}
+            />
+          </CRow>
+          <CRow className="mt-4">
+            <CCol>
+              <CButton color="secondary" className="me-2" onClick={saveCarousel}>
+                <CIcon icon={cilSave} /> {carouselId ? 'Save' : 'Add'}
+              </CButton>
+              <CButton color="info" className="me-2" onClick={generatePDF}>
+                <CIcon icon={cilCloudDownload} /> Download PDF
+              </CButton>
+              <CButton color="primary" onClick={postToLinkedIn}>
+                Post to LinkedIn
+              </CButton>
             </CCol>
           </CRow>
         </CTabPane>
@@ -680,8 +794,12 @@ function Carrossel({ accessToken, userId }) {
           {carousels.map(carousel => (
             <CCard key={carousel.id} className="mb-3">
               <CCardBody>
-                <CCardTitle>{carousel.CarrosselItems[0].title}</CCardTitle>
-                <CCardText>{carousel.CarrosselItems[0].text}</CCardText>
+                {carousel.CarrosselItems && carousel.CarrosselItems.length > 0 && (
+                  <>
+                    <CCardTitle>{carousel.CarrosselItems[0].title}</CCardTitle>
+                    <CCardText>{carousel.CarrosselItems[0].text}</CCardText>
+                  </>
+                )}
                 <CButton color="info" className="me-2" onClick={() => { setActiveTab(0); setCarouselId(carousel.id); initializeEditCarousel(carousel); }}>
                   <CIcon icon={cilPencil} /> Edit
                 </CButton>
@@ -694,29 +812,15 @@ function Carrossel({ accessToken, userId }) {
         </CTabPane>
       </CTabContent>
 
-      <CRow className='mt-8'>
-        <MiniatureDragDrop
-          carouselItems={carouselItems}
-          setCarouselItems={setCarouselItems}
-          setCurrentPageIndex={setCurrentPageIndex}
-          handleAddItem={handleAddItem}
-          handleDeleteItem={handleDeleteItem}
-          titleFont={titleFont}
-          titleFontWeight={titleFontWeight}
-          palette={palette}
-        />
-      </CRow>
-      <CRow className="mt-4">
-        <CCol>
-          <CButton color="secondary" className="me-2" onClick={saveCarousel}>
-            <CIcon icon={cilSave} /> {carouselId ? 'Save' : 'Add'}
-          </CButton>
-          <CButton color="info" className="me-2" onClick={handleGeneratePng}>
-            <CIcon icon={cilCloudDownload} /> Download PNG
-          </CButton>
-        </CCol>
-      </CRow>
-    </CContainer >
+      <PreviewModal
+        show={showPreviewModal}
+        onClose={() => setShowPreviewModal(false)}
+        postText={postText}
+        setPostText={setPostText}
+        fetchPostText={fetchPostText}
+        pngImages={pngImages}
+      />
+    </CContainer>
   );
 }
 
