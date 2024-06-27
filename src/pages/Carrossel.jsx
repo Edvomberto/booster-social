@@ -58,6 +58,7 @@ function Carrossel({ accessToken, userId }) {
   const [pdf, setPdf] = useState(null);
   const [pngImages, setPngImages] = useState([]);
 
+
   const previewRef = useRef(null);
   const previewBack = useRef(null);
 
@@ -142,28 +143,29 @@ function Carrossel({ accessToken, userId }) {
 
   };
 
-  const handlePaletteSelect = (selectedPalette) => {
-    setPalette(selectedPalette);
-    updateSVGColor(selectedPalette); // Update SVG color when palette is selected
+  const handlePaletteSelect = (selectedPallete) => {
+    setPalette(selectedPallete);
+    updateSVGColor(selectedPallete); // Update SVG color when palette is selected
     if (carouselItems.length > 0) {
-      carouselItems.forEach((_, index) => updateThumbnail(index, carouselItems, selectedPalette));
+      carouselItems.forEach((_, index) => updateThumbnail(index, carouselItems, selectedPallete));
     }
   };
 
-  const updateSVGColor = (palette) => {
+
+  const updateSVGColor = (pallete) => {
     fetch(`./assets/${backgroundDesign}.svg`)
       .then(response => response.text())
       .then(svgText => {
         const coloredSvgText = svgText
-          .replace(/fill="#ffb142"/g, `fill="${palette[0]}"`)
-          .replace(/fill="#52656F"/g, `fill="${palette[1]}"`)
+          .replace(/fill="#ffb142"/g, `fill="${pallete[0]}"`)
+          .replace(/fill="#52656F"/g, `fill="${pallete[1]}"`)
           .replace(/width="[^"]*"/g, `width="448px"`)
           .replace(/height="[^"]*"/g, `height="568px"`);
         if (previewBack.current) {
           previewBack.current.style.backgroundImage = `url('data:image/svg+xml;base64,${btoa(coloredSvgText)}')`;
           previewBack.current.style.backgroundRepeat = 'no-repeat';
           previewBack.current.style.backgroundPosition = 'center';
-          previewBack.current.style.backgroundColor = 'white'; // Adicione esta linha para definir a cor de fundo como branco
+          previewBack.current.style.backgroundColor = pallete[3]; // Adicione esta linha para definir a cor de fundo como branco
         }
       })
       .catch(error => {
@@ -233,31 +235,58 @@ function Carrossel({ accessToken, userId }) {
 
   const generatePDF = async () => {
     try {
-      const doc = new jsPDF();
+      const doc = new jsPDF({
+        orientation: 'portrait', // Orientação retrato
+        unit: 'mm', // Unidade em milímetros
+        format: [119, 150] // Dimensões 119 x 150 mm
+      });
       console.log('Generating PDF...');
-
+  
       for (const [index, item] of carouselItems.entries()) {
         const element = previewBack.current;
         if (element) {
           console.log(`Rendering item ${index}...`);
           setCurrentPageIndex(index);
           await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for rendering
-
-          const imgData = await toPng(element, { quality: 1 });
+  
+          const imgData = await toPng(element, {
+            quality: 1,
+            width: element.offsetWidth,
+            height: element.offsetHeight,
+          });
+  
+          const pdfWidth = 119; // Largura do PDF em mm
+          const pdfHeight = 150; // Altura do PDF em mm
+  
+          // Manter a proporção da imagem ajustada às dimensões do PDF
+          const aspectRatio = element.offsetHeight / element.offsetWidth;
+          const adjustedHeight = pdfWidth * aspectRatio;
+  
           if (index > 0) doc.addPage();
-          doc.addImage(imgData, 'PNG', 10, 10, 190, 270);
+          doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, adjustedHeight);
         }
       }
+      
       const pdfBlob = doc.output('blob');
       const pdfUrl = URL.createObjectURL(pdfBlob);
       console.log('PDF generated:', pdfUrl);
-
+  
+      // Create a link element for downloading the PDF
+      const link = document.createElement('a');
+      link.href = pdfUrl;
+      link.download = 'carousel.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+  
+      // Optional: if you still want to set the PDF URL in the state and show the preview modal
       setPdf(pdfUrl);
-      setShowPreviewModal(true);
     } catch (error) {
       console.error('Error generating PDF:', error);
     }
   };
+  
+  
 
   const deleteCarousel = async (id) => {
     if (window.confirm('Tem certeza de que deseja excluir este carrossel?')) {
@@ -345,38 +374,49 @@ function Carrossel({ accessToken, userId }) {
       };
 
       const response = await axios.post('/carrossel/getIdeiasCarrossel', payload);
-
       const { slideIdeas } = response.data;
 
-      const newSlides = slideIdeas.split('\n\n').map((slideIdea) => {
-        const [titlePart, ...descriptionParts] = slideIdea.split('\n');
-        const title = titlePart.replace('Título: ', '');
-        const text = descriptionParts.join('\n').replace('Descrição: ', '');
+      console.log('slideIdeas:', slideIdeas); // Log para verificar a resposta
 
-        return {
-          id: Date.now() + Math.random(),
-          title,
-          text,
-          imageUrl: null,
-          imagePosition: 'top',
-          imageSize: 20,
-          imagePositionX: 0,
-          imagePositionY: 0,
-          textPositionX: 0,
-          textPositionY: 0,
-        };
-      });
+      // Corrigindo o parse dos dados retornados
+      const ideasArray = slideIdeas.split('\n\n').map(idea => {
+        try {
+          return JSON.parse(idea.replace(/\n/g, ''));
+        } catch (e) {
+          console.error('Error parsing idea:', idea, e);
+          return null;
+        }
+      }).filter(idea => idea !== null);
 
-      // Clear previous pages and set new ones
+      console.log('ideasArray:', ideasArray); // Log para verificar o array processado
+
+      const newSlides = ideasArray.map(slideIdea => ({
+        id: Date.now() + Math.random(),
+        title: slideIdea.titulo,
+        text: slideIdea.conteudo,
+        imageUrl: null,
+        imagePosition: 'top',
+        imageSize: 20,
+        imagePositionX: 0,
+        imagePositionY: 0,
+        textPositionX: 0,
+        textPositionY: 0,
+      }));
+
+      console.log('newSlides:', newSlides); // Log para verificar os novos slides
+
+      // Limpar páginas anteriores e definir novas
       setCarouselItems(newSlides);
       setCurrentPageIndex(0);
 
-      // Generate thumbnails for all new slides
+      // Gerar miniaturas para todos os novos slides
       newSlides.forEach((_, index) => updateThumbnail(index, newSlides));
     } catch (error) {
       console.error('Error generating title:', error);
     }
   };
+
+
 
   const updateThumbnail = async (index, items, selectedPalette) => {
     const element = previewBack.current;
@@ -531,8 +571,13 @@ function Carrossel({ accessToken, userId }) {
                   {carouselItems[currentPageIndex] && (
                     <Draggable bounds="parent" position={{ x: carouselItems[currentPageIndex].textPositionX, y: carouselItems[currentPageIndex].textPositionY }} onStop={(e, data) => handleDragStop(e, data, 'text')}>
                       <div className={`highlightable-div ${selectedDiv === 2 ? 'selected' : ''}`} style={{ transform: 'translateX(-50%)', position: 'relative' }} onClick={(e) => handleDivClick(e, 2)}>
-                        <CCardTitle style={{ fontFamily: titleFont, fontWeight: titleFontWeight, fontSize: fontSize === 'Small' ? '16px' : (fontSize === 'Medium' ? '24px' : '32px'), color: palette[0] }}>{title}</CCardTitle>
-                        <CCardText style={{ fontFamily: textFont, fontWeight: textFontWeight, fontSize: fontSize === 'Small' ? '12px' : (fontSize === 'Medium' ? '16px' : '20px'), color: palette[1] }}>{text}</CCardText>
+                        {showSlideNumber && currentPageIndex > 0 && (
+                          <div style={{ position: 'absolute', top: '-20px', left: '5%', transform: 'translateX(-50%)', background: palette[0], borderRadius: '50%', width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>
+                            {currentPageIndex}
+                          </div>
+                        )}
+                        <CCardTitle style={{ fontFamily: titleFont, paddingTop: '20px', fontWeight: titleFontWeight, fontSize: fontSize === 'Small' ? '16px' : (fontSize === 'Medium' ? '24px' : '32px'), color: palette[0] }}>{title}</CCardTitle>
+                        <CCardText style={{ fontFamily: textFont, paddingTop: '20px', fontWeight: textFontWeight, fontSize: fontSize === 'Small' ? '12px' : (fontSize === 'Medium' ? '16px' : '20px'), color: palette[1] }}>{text}</CCardText>
                       </div>
                     </Draggable>
                   )}
@@ -545,8 +590,8 @@ function Carrossel({ accessToken, userId }) {
                 <div className="css-vmpweq" style={{ gridRow: '3 / 4', display: 'flex', left: '30px', justifyContent: 'flex-start', gap: '0.417857rem', marginTop: '20px', bottom: "30px", position: "absolute", alignItems: "flex-start" }}>
                   {showHeadshot && userInfo && <CImage src={userInfo.picture} alt="Headshot" style={{ width: '40px', borderRadius: '50%', margin: '10px 0' }} />}
                   <div className="css-0" style={{ display: 'flex', flexDirection: 'column' }}>
-                    {showName && userInfo && <CCardTitle style={{ fontSize: "0.73125rem", gap: '0.417857rem', paddingTop: '10px' }}>{userInfo.name}</CCardTitle>}
-                    {showLinkedinHandle && userInfo && <CCardText style={{ fontSize: "0.70rem", gap: '0.417857rem', paddingTop: '5px' }}>@{userInfo.given_name}</CCardText>}
+                    {showName && userInfo && <CCardTitle style={{ fontSize: "0.73125rem", gap: '0.417857rem', paddingTop: '10px', color: palette[0] }}>{userInfo.name}</CCardTitle>}
+                    {showLinkedinHandle && userInfo && <CCardText style={{ fontSize: "0.70rem", gap: '0.417857rem', paddingTop: '5px', color: palette[1] }}>@{userInfo.given_name}</CCardText>}
                   </div>
                 </div>
               </div>
@@ -820,6 +865,7 @@ function Carrossel({ accessToken, userId }) {
         fetchPostText={fetchPostText}
         pngImages={pngImages}
       />
+      <CRow className="mt-5" />
     </CContainer>
   );
 }
