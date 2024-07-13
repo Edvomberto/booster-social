@@ -3,7 +3,7 @@ import Draggable from 'react-draggable';
 import {
   CContainer, CButton, CFormInput, CNav, CNavItem, CNavLink, CTabContent, CTabPane,
   CFormSelect, CFormCheck, CCard, CCardBody, CCardTitle, CCardText, CImage,
-  CRow, CCol, CFormLabel, CFormTextarea, CForm, CTabs, CTabList, CTab, CTabPanel, CFormRange, CInputGroup, CInputGroupText
+  CRow, CCol, CFormLabel, CFormTextarea, CForm, CTabs, CTabList, CTab, CTabPanel, CFormRange, CInputGroup, CInputGroupText, CCloseButton
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilSave, cilCloudDownload, cilTrash, cilPencil } from '@coreui/icons';
@@ -11,6 +11,8 @@ import * as htmlToImage from 'html-to-image';
 import { toPng } from 'html-to-image';
 import jsPDF from 'jspdf';
 import axios from '../axiosConfig';
+import axios2 from 'axios';
+
 import '../components/Highlight.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import MiniatureDragDrop from './MiniatureDragDrop';
@@ -57,7 +59,7 @@ function Carrossel({ accessToken, userId }) {
   const [postText, setPostText] = useState('');
   const [pdf, setPdf] = useState(null);
   const [pngImages, setPngImages] = useState([]);
-
+  const [imageLoaded, setImageLoaded] = useState(false); // Novo estado para controlar o carregamento da imagem
 
   const previewRef = useRef(null);
   const previewBack = useRef(null);
@@ -110,6 +112,7 @@ function Carrossel({ accessToken, userId }) {
         const newCarouselItems = [...carouselItems];
         newCarouselItems[currentPageIndex].imageUrl = imageUrl;
         setCarouselItems(newCarouselItems);
+        setImageLoaded(false); // Resetar estado de carregamento da imagem
         updateThumbnail(currentPageIndex, newCarouselItems);
       })
       .catch(error => {
@@ -119,28 +122,45 @@ function Carrossel({ accessToken, userId }) {
 
   const handleRemoveImage = () => {
     const newCarouselItems = [...carouselItems];
-    newCarouselItems[currentPageIndex].imageUrl = null;
+    newCarouselItems[currentPageIndex].imageUrl = null; // Modifique apenas a imagem da página atual
     setCarouselItems(newCarouselItems);
+    setImageLoaded(false); // Resetar estado de carregamento da imagem
     updateThumbnail(currentPageIndex, newCarouselItems);
   };
 
+  const handleImageLoad = () => {
+    setImageLoaded(true); // Atualizar estado quando a imagem for carregada
+  };
+
   const generatePngImages = async () => {
-    const images = [];
+    try {
+      const images = [];
 
-    for (const [index, item] of carouselItems.entries()) {
-      const element = previewBack.current;
-      if (element) {
-        console.log(`Rendering item ${index}...`);
-        setCurrentPageIndex(index);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for rendering
+      for (const [index, item] of carouselItems.entries()) {
+        const element = previewBack.current;
+        if (element) {
+          console.log(`Rendering item ${index}...`);
+          setCurrentPageIndex(index);
+          await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for rendering
 
-        const imgData = await toPng(element, { quality: 1 });
-        images.push(imgData);
+          if (!imageUrl || imageLoaded) { // Verificar se a imagem está carregada
+            try {
+              const imgData = await toPng(element, { quality: 1 });
+              images.push(imgData);
+            } catch (error) {
+              console.error(`Erro ao gerar imagem PNG para o item ${index}:`, error);
+            }
+          } else {
+            console.warn(`Imagem não carregada para o item ${index}, pulando...`);
+          }
+        }
       }
-    }
-    setPngImages(images);
-    setShowPreviewModal(true);
 
+      setPngImages(images);
+      setShowPreviewModal(true);
+    } catch (error) {
+      console.error('Erro ao gerar imagens PNG:', error);
+    }
   };
 
   const handlePaletteSelect = (selectedPallete) => {
@@ -150,7 +170,6 @@ function Carrossel({ accessToken, userId }) {
       carouselItems.forEach((_, index) => updateThumbnail(index, carouselItems, selectedPallete));
     }
   };
-
 
   const updateSVGColor = (pallete) => {
     fetch(`./assets/${backgroundDesign}.svg`)
@@ -241,52 +260,42 @@ function Carrossel({ accessToken, userId }) {
         format: [119, 150] // Dimensões 119 x 150 mm
       });
       console.log('Generating PDF...');
-  
+
       for (const [index, item] of carouselItems.entries()) {
         const element = previewBack.current;
         if (element) {
           console.log(`Rendering item ${index}...`);
           setCurrentPageIndex(index);
           await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for rendering
-  
+
           const imgData = await toPng(element, {
             quality: 1,
             width: element.offsetWidth,
             height: element.offsetHeight,
           });
-  
+
           const pdfWidth = 119; // Largura do PDF em mm
           const pdfHeight = 150; // Altura do PDF em mm
-  
+
           // Manter a proporção da imagem ajustada às dimensões do PDF
           const aspectRatio = element.offsetHeight / element.offsetWidth;
           const adjustedHeight = pdfWidth * aspectRatio;
-  
+
           if (index > 0) doc.addPage();
           doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, adjustedHeight);
         }
       }
-      
+
       const pdfBlob = doc.output('blob');
       const pdfUrl = URL.createObjectURL(pdfBlob);
       console.log('PDF generated:', pdfUrl);
-  
-      // Create a link element for downloading the PDF
-      const link = document.createElement('a');
-      link.href = pdfUrl;
-      link.download = 'carousel.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-  
-      // Optional: if you still want to set the PDF URL in the state and show the preview modal
-      setPdf(pdfUrl);
+
+      return pdfBlob; // Retornar o PDF Blob para upload posterior
     } catch (error) {
       console.error('Error generating PDF:', error);
+      throw error;
     }
   };
-  
-  
 
   const deleteCarousel = async (id) => {
     if (window.confirm('Tem certeza de que deseja excluir este carrossel?')) {
@@ -416,8 +425,6 @@ function Carrossel({ accessToken, userId }) {
     }
   };
 
-
-
   const updateThumbnail = async (index, items, selectedPalette) => {
     const element = previewBack.current;
     const paletteToUse = selectedPalette || palette;
@@ -452,12 +459,39 @@ function Carrossel({ accessToken, userId }) {
 
   const postToLinkedIn = async () => {
     try {
-      await axios.post(`/carrossel/postToLinkedIn`, { text: postText, carouselItems });
-      console.log('Post successfully published to LinkedIn');
+        // 1. Gerar o PDF
+        const pdfBlob = await generatePDF();
+
+        // 2. Fazer o upload do PDF
+        const formData = new FormData();
+        formData.append('file', pdfBlob, 'carousel.pdf');
+
+        const uploadResponse = await axios.post('/post/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+
+        console.log(uploadResponse.data.url);
+
+        const filePath = "https://ws-booster-social-5040b10dd814.herokuapp.com" + uploadResponse.data.url;
+
+        console.log(filePath);
+
+        // 3. Fazer a postagem no LinkedIn
+        await axios.post('/post/post_carrossel', {
+            accessToken,
+            commentary: postText,
+            filePath
+        });
+
+        console.log('Post successfully published to LinkedIn');
     } catch (error) {
-      console.error('Error posting to LinkedIn:', error);
+        console.error('Error posting to LinkedIn:', error);
     }
-  };
+};
+
+
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -565,7 +599,7 @@ function Carrossel({ accessToken, userId }) {
                 <div id="divRef" ref={previewRef} className='containerRef'>
                   {carouselItems[currentPageIndex] && imagePosition === 'top' && imageUrl && (
                     <Draggable bounds="parent" position={{ x: carouselItems[currentPageIndex].imagePositionX, y: carouselItems[currentPageIndex].imagePositionY }} onStop={(e, data) => handleDragStop(e, data, 'image')}>
-                      <CImage id="imageId" src={imageUrl} alt="Image" style={{ width: `${imageSize}%`, transform: 'translateX(-50%)', position: 'relative', marginBottom: '20px', objectFit: 'contain' }} className={`highlightable-div ${selectedDiv === 1 ? 'selected' : ''}`} onClick={(e) => handleDivClick(e, 1)} />
+                      <CImage id="imageId" src={imageUrl} alt="Image" style={{ width: `${imageSize}%`, transform: 'translateX(-50%)', position: 'relative', marginBottom: '20px', objectFit: 'contain' }} className={`highlightable-div ${selectedDiv === 1 ? 'selected' : ''}`} onClick={(e) => handleDivClick(e, 1)} onLoad={handleImageLoad} />
                     </Draggable>
                   )}
                   {carouselItems[currentPageIndex] && (
@@ -583,7 +617,7 @@ function Carrossel({ accessToken, userId }) {
                   )}
                   {carouselItems[currentPageIndex] && imagePosition === 'bottom' && imageUrl && (
                     <Draggable bounds="parent" position={{ x: carouselItems[currentPageIndex].imagePositionX, y: carouselItems[currentPageIndex].imagePositionY }} onStop={(e, data) => handleDragStop(e, data, 'image')}>
-                      <CImage id="imageId" src={imageUrl} alt="Image" style={{ width: `${imageSize}%`, transform: 'translateX(-50%)', position: 'relative', marginBottom: '20px', objectFit: 'contain' }} className={`highlightable-div ${selectedDiv === 1 ? 'selected' : ''}`} onClick={(e) => handleDivClick(e, 1)} />
+                      <CImage id="imageId" src={imageUrl} alt="Image" style={{ width: `${imageSize}%`, transform: 'translateX(-50%)', position: 'relative', marginBottom: '20px', objectFit: 'contain' }} className={`highlightable-div ${selectedDiv === 1 ? 'selected' : ''}`} onClick={(e) => handleDivClick(e, 1)} onLoad={handleImageLoad} />
                     </Draggable>
                   )}
                 </div>
@@ -647,22 +681,27 @@ function Carrossel({ accessToken, userId }) {
                             {imageUrl && (
                               <div className="mt-2 position-relative" style={{ display: 'inline-block' }}>
                                 <CImage src={imageUrl} thumbnail alt="Selected Image" width="120" />
-                                <button
+                                <CCloseButton
                                   onClick={handleRemoveImage}
                                   style={{
                                     position: 'absolute',
-                                    top: '1px',
+                                    top: '5px',
                                     right: '5px',
-                                    background: 'none',
+                                    background: 'black',
                                     border: 'none',
                                     color: 'red',
                                     fontSize: '20px',
+                                    width: '20px',
+                                    height: '20px',
+                                    borderRadius: '50%',
                                     padding: 0,
                                     cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
                                   }}
-                                >
-                                  &times;
-                                </button>
+                                >&times;
+                                </CCloseButton>
                               </div>
                             )}
                           </div>
@@ -809,16 +848,29 @@ function Carrossel({ accessToken, userId }) {
             </CCol>
           </CRow>
           <CRow className='mt-8'>
-            <MiniatureDragDrop
-              carouselItems={carouselItems}
-              setCarouselItems={setCarouselItems}
-              setCurrentPageIndex={setCurrentPageIndex}
-              handleAddItem={handleAddItem}
-              handleDeleteItem={handleDeleteItem}
-              titleFont={titleFont}
-              titleFontWeight={titleFontWeight}
-              palette={palette}
-            />
+            <CCol >
+              <MiniatureDragDrop
+                carouselItems={carouselItems}
+                setCarouselItems={setCarouselItems}
+                setCurrentPageIndex={setCurrentPageIndex}
+                handleAddItem={handleAddItem}
+                handleDeleteItem={handleDeleteItem}
+                titleFont={titleFont}
+                titleFontWeight={titleFontWeight}
+                palette={palette}
+              />
+            </CCol>
+            <CCol>
+              <CFormLabel htmlFor="postText">Post Text</CFormLabel>
+              <CFormTextarea 
+                id="postText"
+                rows="3"
+                value={postText}
+                onChange={(e) => setPostText(e.target.value)}
+                style={{ width: '500px' }} // Defina a largura desejada aqui
+
+              />
+            </CCol>
           </CRow>
           <CRow className="mt-4">
             <CCol>
@@ -832,6 +884,7 @@ function Carrossel({ accessToken, userId }) {
                 Post to LinkedIn
               </CButton>
             </CCol>
+
           </CRow>
         </CTabPane>
         <CTabPane visible={activeTab === 1}>
@@ -860,9 +913,6 @@ function Carrossel({ accessToken, userId }) {
       <PreviewModal
         show={showPreviewModal}
         onClose={() => setShowPreviewModal(false)}
-        postText={postText}
-        setPostText={setPostText}
-        fetchPostText={fetchPostText}
         pngImages={pngImages}
       />
       <CRow className="mt-5" />

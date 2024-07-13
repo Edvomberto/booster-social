@@ -4,7 +4,7 @@ import {
 } from '@coreui/react';
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 
-const PreviewModal = ({ show, onClose, postText, setPostText, fetchPostText, pngImages = [] }) => {
+const PreviewModal = ({ show, onClose, pngImages = [] }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
@@ -61,22 +61,7 @@ const PreviewModal = ({ show, onClose, postText, setPostText, fetchPostText, png
             </div>
           </CCardBody>
         </CCard>
-        <CRow className='mt-4'>
-          <CCol>
-            <CFormLabel htmlFor="postText">Post Text</CFormLabel>
-            <CFormTextarea
-              id="postText"
-              rows="3"
-              value={postText}
-              onChange={(e) => setPostText(e.target.value)}
-            />
-          </CCol>
-          <CCol className="d-flex align-items-end">
-            <CButton color="info" onClick={fetchPostText}>
-              Generate Post Text
-            </CButton>
-          </CCol>
-        </CRow>
+
       </CModalBody>
       <CModalFooter>
         <CButton color="secondary" onClick={onClose}>Close</CButton>

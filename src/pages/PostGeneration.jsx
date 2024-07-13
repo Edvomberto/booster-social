@@ -1,4 +1,3 @@
-// src/pages/PostGeneration.jsx
 import React, { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import {
@@ -218,7 +217,7 @@ function PostGeneration({ accessToken, userId }) {
 
       let response;
       if (currentPost) {
-        response = await axios.put(`/post/posts/${currentPost.id.replace('task-', '')}`, formData, {
+        response = await axios.put(`/post/posts/${String(currentPost.id).replace('task-', '')}`, formData, {
           headers: {
             'Content-Type': 'multipart-form-data',
           },
@@ -243,27 +242,32 @@ function PostGeneration({ accessToken, userId }) {
         [newId]: newTask,
       };
 
-      const newTaskIds = Array.from(data.columns[currentColumnId || 'column-3'].taskIds);
+      const columnId = currentColumnId || 'column-3';
+      const newTaskIds = Array.from(data.columns[columnId].taskIds);
       if (!currentPost) {
         newTaskIds.push(newId);
       }
 
       const newColumn = {
-        ...data.columns[currentColumnId || 'column-3'],
+        ...data.columns[columnId],
         taskIds: newTaskIds,
       };
 
-      setData({
+      const newState = {
         ...data,
         tasks: newTasks,
         columns: {
           ...data.columns,
           [newColumn.id]: newColumn,
         },
-      });
+      };
+
+      console.log('Novo estado após adicionar post:', JSON.stringify(newState, null, 2));
+
+      setData(newState);
 
       // Registrar a data de postagem
-      await axios.post('/save-hist-post', {
+      await axios.post('/post/save-hist-post', {
         postId: newPost.id,
         datePosted: new Date(),
       });
@@ -338,14 +342,18 @@ function PostGeneration({ accessToken, userId }) {
         taskIds: newTaskIds,
       };
 
-      setData({
+      const newState = {
         ...data,
         tasks: newTasks,
         columns: {
           ...data.columns,
           [newColumn.id]: newColumn,
         },
-      });
+      };
+
+      console.log('Novo estado após duplicar post:', JSON.stringify(newState, null, 2));
+
+      setData(newState);
 
       addToast(t('post_duplicated'), 'success');
     } catch (error) {
@@ -383,44 +391,51 @@ function PostGeneration({ accessToken, userId }) {
                         {t(column.title)}
                       </CCardHeader>
                       <CCardBody className="column-body">
-                        {tasks.map((task, index) => (
-                          <Draggable key={task.id} draggableId={task.id.toString()} index={index}>
-                            {(provided) => (
-                              <div
-                                className="task"
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                onClick={() => handleEditPost(task)}
-                              >
-                                <h5>{task.title}</h5>
-                                <div dangerouslySetInnerHTML={{ __html: truncateHtml(task.content) }} />
-                                {task.image && <img src={`${task.image}`} alt="Post" style={{ width: '100%' }} />}
-                                <CButton
-                                  color="danger"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeletePost(task.id, column.id);
-                                  }}
+                        {tasks.map((task, index) => {
+                          if (!task) {
+                            console.warn(`Task ID ${column.taskIds[index]} não encontrado.`);
+                            console.log('Estado atual de tasks:', JSON.stringify(data.tasks, null, 2));
+                            return null;
+                          }
+                          return (
+                            <Draggable key={task.id} draggableId={task.id.toString()} index={index}>
+                              {(provided) => (
+                                <div
+                                  className="task"
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  onClick={() => handleEditPost(task)}
                                 >
-                                  {t('delete_post')}
-                                </CButton>
-                                <CButton
-                                  color="info"
-                                  size="sm"
-                                  className="ml-2"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDuplicatePost(task.id, column.id);
-                                  }}
-                                >
-                                  {t('duplicate_post')}
-                                </CButton>
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
+                                  <h5>{task.title}</h5>
+                                  <div dangerouslySetInnerHTML={{ __html: truncateHtml(task.content) }} />
+                                  {task.image && <img src={`${task.image}`} alt="Post" style={{ width: '100%' }} />}
+                                  <CButton
+                                    color="danger"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeletePost(task.id, column.id);
+                                    }}
+                                  >
+                                    {t('delete_post')}
+                                  </CButton>
+                                  <CButton
+                                    color="info"
+                                    size="sm"
+                                    className="ml-2"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDuplicatePost(task.id, column.id);
+                                    }}
+                                  >
+                                    {t('duplicate_post')}
+                                  </CButton>
+                                </div>
+                              )}
+                            </Draggable>
+                          );
+                        })}
                         {provided.placeholder}
                       </CCardBody>
                       <div className="add-post-footer">

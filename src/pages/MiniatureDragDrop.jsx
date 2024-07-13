@@ -16,6 +16,14 @@ const MiniatureDragDrop = ({ carouselItems, setCarouselItems, setCurrentPageInde
     setCarouselItems(reorderedItems);
   };
 
+  const handleAddItemWithLimit = () => {
+    if (carouselItems.length < 8) {
+      handleAddItem();
+    } else {
+      alert("O número máximo de páginas é 8.");
+    }
+  };
+
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <Droppable droppableId="droppable" direction="horizontal">
@@ -24,6 +32,7 @@ const MiniatureDragDrop = ({ carouselItems, setCarouselItems, setCurrentPageInde
             className="dropzone"
             {...provided.droppableProps}
             ref={provided.innerRef}
+            style={{ display: 'flex', overflowX: 'auto', padding: '10px', whiteSpace: 'nowrap' }} // Adicionei estilo para suportar rolagem horizontal
           >
             {carouselItems.map((item, index) => (
               <Draggable key={item.id} draggableId={`draggable-${item.id}`} index={index}>
@@ -35,26 +44,42 @@ const MiniatureDragDrop = ({ carouselItems, setCarouselItems, setCurrentPageInde
                     {...provided.dragHandleProps}
                     style={{
                       ...provided.draggableProps.style,
+                      width: '100px', // Definindo largura fixa
+                      margin: '0 10px' // Espaçamento entre as miniaturas
                     }}
                     onClick={() => setCurrentPageIndex(index)}
                   >
-                    <div id={`carousel-item-${index}`} style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
-                      <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                        {item.thumbnail ? (
-                          <CImage src={item.thumbnail} alt={`Page ${index + 1}`} style={{ width: '100%', height: 'auto' }} />
-                        ) : (
-                          <>
-                            {item.imageUrl && <CImage src={item.imageUrl} alt={`Page ${index + 1}`} style={{ width: '100%', height: 'auto' }} />}
-                            <CCardTitle style={{ fontFamily: titleFont, fontWeight: titleFontWeight, fontSize: '12px', color: palette[0], position: 'absolute', bottom: '20px', left: '5px', right: '5px', textAlign: 'center' }}>
-                              {item.title}
-                            </CCardTitle>
-                          </>
-                        )}
-                      </div>
+                    <div id={`carousel-item-${index}`} style={{ width: '100%', height: '130px', overflow: 'hidden', position: 'relative' }}>
+                      {item.thumbnail ? (
+                        <CImage src={item.thumbnail} alt={`Page ${index + 1}`} style={{ width: '100%', height: 'auto' }} />
+                      ) : (
+                        <>
+                          {item.imageUrl && <CImage src={item.imageUrl} alt={`Page ${index + 1}`} style={{ width: '100%', height: 'auto' }} />}
+                          <CCardTitle style={{ fontFamily: titleFont, fontWeight: titleFontWeight, fontSize: '12px', color: palette[0], position: 'absolute', bottom: '20px', left: '5px', right: '5px', textAlign: 'center' }}>
+                            {item.title}
+                          </CCardTitle>
+                        </>
+                      )}
                     </div>
                     <button
                       onClick={(e) => { e.stopPropagation(); handleDeleteItem(index); }}
                       className="delete-button"
+                      style={{
+                        position: 'absolute',
+                        top: '5px',
+                        right: '5px',
+                        background: 'red',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: '20px',
+                        height: '20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        color: 'white',
+                        fontSize: '12px',
+                      }}
                     >
                       &times;
                     </button>
@@ -63,7 +88,11 @@ const MiniatureDragDrop = ({ carouselItems, setCarouselItems, setCurrentPageInde
               </Draggable>
             ))}
             {provided.placeholder}
-            <div className="m-2 d-flex align-items-center justify-content-center" style={{ paddingTop:'10px', marginTop: '15px', width: '100px', height: '130px', border: '1px dashed #ccc', cursor: 'pointer' }} onClick={handleAddItem}>
+            <div
+              className="m-2 d-flex align-items-center justify-content-center"
+              style={{ width: '100px', height: '130px', border: '1px dashed #ccc', cursor: 'pointer' }}
+              onClick={handleAddItemWithLimit}
+            >
               <CIcon icon={cilPlus} size="xl" />
             </div>
           </div>

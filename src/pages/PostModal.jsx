@@ -1,4 +1,3 @@
-// src/pages/PostModal.jsx
 import React, { useState, useEffect } from 'react';
 import {
   Modal,
@@ -20,8 +19,7 @@ import axios from '../axiosConfig';
 import { useTranslation } from 'react-i18next';
 import { CToast, CToastBody, CToastHeader, CToaster, CButtonGroup, CFormCheck } from '@coreui/react';
 import '@fortawesome/fontawesome-free/css/all.min.css';
-import './PostModal.css'; // Certifique-se de importar o arquivo de estilos
-
+import './PostModal.css';
 
 const PostModal = ({ isOpen = false, toggle = () => { }, onSave = () => { }, post = null, userId = null }) => {
   const { t, i18n } = useTranslation();
@@ -55,7 +53,6 @@ const PostModal = ({ isOpen = false, toggle = () => { }, onSave = () => { }, pos
     }
   }, [post]);
 
-
   const addToast = (message, color) => {
     setToasts([...toasts, { message, color }]);
   };
@@ -85,7 +82,7 @@ const PostModal = ({ isOpen = false, toggle = () => { }, onSave = () => { }, pos
 
     axios.post('/post/upload', formData)
       .then(response => {
-        const imageUrl = axios.defaults.baseURL + response.data.url;
+        const imageUrl = "https://ws-booster-social-5040b10dd814.herokuapp.com" + response.data.url;
         setImageUrl(imageUrl);
         addToast(t('image_upload_success'), 'success');
       })
@@ -234,7 +231,7 @@ const PostModal = ({ isOpen = false, toggle = () => { }, onSave = () => { }, pos
       <ModalBody>
         <Row>
           <Col md="3">
-          <FormGroup>
+            <FormGroup>
               <Label for="subject">{t('subject')}</Label>
               <InputGroup className="input-group-title">
                 <Input
@@ -251,7 +248,7 @@ const PostModal = ({ isOpen = false, toggle = () => { }, onSave = () => { }, pos
                   </Button>
                 </InputGroupText>
               </InputGroup>
-            </FormGroup>          
+            </FormGroup>
             <FormGroup>
               <textarea
                 id="ideas"
@@ -443,7 +440,7 @@ const PostModal = ({ isOpen = false, toggle = () => { }, onSave = () => { }, pos
       </ModalFooter>
       <CToaster position="top-right">
         {toasts.map((toast, index) => (
-          <CToast key={index} autohide={true} visible={true} color={toast.color}>
+          <CToast key={`toast-${index}`} autohide={true} visible={true} color={toast.color}>
             <CToastHeader closeButton>
               <strong className="me-auto">{t('notification')}</strong>
             </CToastHeader>
