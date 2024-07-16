@@ -1,18 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import Draggable from 'react-draggable';
 import {
   CContainer, CButton, CFormInput, CNav, CNavItem, CNavLink, CTabContent, CTabPane,
   CFormSelect, CFormCheck, CCard, CCardBody, CCardTitle, CCardText, CImage,
-  CRow, CCol, CFormLabel, CFormTextarea, CForm, CTabs, CTabList, CTab, CTabPanel, CFormRange, CInputGroup, CInputGroupText, CCloseButton
+  CRow, CCol, CFormLabel, CFormTextarea, CForm, CTabs, CTabList, CTab, CTabPanel, CFormRange, CInputGroup, CInputGroupText, CCloseButton, CFormSwitch, CButtonGroup, CSpinner
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilSave, cilCloudDownload, cilTrash, cilPencil } from '@coreui/icons';
 import * as htmlToImage from 'html-to-image';
-import { toPng } from 'html-to-image';
 import jsPDF from 'jspdf';
 import axios from '../axiosConfig';
 import axios2 from 'axios';
-
+import QuoteIcon from '../components/QuoteIcon';
 import '../components/Highlight.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import MiniatureDragDrop from './MiniatureDragDrop';
@@ -28,11 +26,7 @@ function Carrossel({ accessToken, userId }) {
     text: 'Descubra como com a DKP',
     imageUrl: null,
     imagePosition: 'top',
-    imageSize: 20,
-    imagePositionX: 0,
-    imagePositionY: 0,
-    textPositionX: 0,
-    textPositionY: 0
+    imageSize: 20
   }]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [title, setTitle] = useState('');
@@ -48,7 +42,7 @@ function Carrossel({ accessToken, userId }) {
   const [showSlideNumber, setShowSlideNumber] = useState(false);
   const [backgroundDesign, setBackgroundDesign] = useState('blobs');
   const [useCustomColors, setUseCustomColors] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [imageUrl, setImageUrl] = useState('');
   const [imagePosition, setImagePosition] = useState('top');
   const [imageSize, setImageSize] = useState(20);
@@ -59,7 +53,15 @@ function Carrossel({ accessToken, userId }) {
   const [postText, setPostText] = useState('');
   const [pdf, setPdf] = useState(null);
   const [pngImages, setPngImages] = useState([]);
-  const [imageLoaded, setImageLoaded] = useState(false); // Novo estado para controlar o carregamento da imagem
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [headerPosition, setHeaderPosition] = useState('bottom');
+  const [showQuotationMarks, setShowQuotationMarks] = useState(false);
+  const [selectedAi, setSelectedAi] = useState('llama3');
+  const [loading, setLoading] = useState(false);
+  const [showBackgroundImage, setShowBackgroundImage] = useState(false);
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState('');
+  const [titleLoading, setTitleLoading] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
 
   const previewRef = useRef(null);
   const previewBack = useRef(null);
@@ -82,54 +84,64 @@ function Carrossel({ accessToken, userId }) {
       text: 'Novo Texto',
       imageUrl: null,
       imagePosition: 'top',
-      imageSize: 20,
-      imagePositionX: 0,
-      imagePositionY: 0,
-      textPositionX: 0,
-      textPositionY: 0
+      imageSize: 20
     };
     setCarouselItems([...carouselItems, newPage]);
-    setCurrentPageIndex(carouselItems.length); // Set the new page as current page
+    setCurrentPageIndex(carouselItems.length);
   };
 
   const handleDeleteItem = (index) => {
     const newCarouselItems = carouselItems.filter((_, i) => i !== index);
     setCarouselItems(newCarouselItems);
-    setCurrentPageIndex(Math.max(0, currentPageIndex - 1)); // Set the previous page as current if current page is deleted
+    setCurrentPageIndex(Math.max(0, currentPageIndex - 1));
   };
 
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
-
     const formData = new FormData();
     formData.append('image', file);
 
-    axios.post('/post/upload', formData)
-      .then(response => {
-        const imageUrl = "https://ws-booster-social-5040b10dd814.herokuapp.com" + response.data.url;
-        console.log(imageUrl);
-        setImageUrl(imageUrl);
-        const newCarouselItems = [...carouselItems];
-        newCarouselItems[currentPageIndex].imageUrl = imageUrl;
-        setCarouselItems(newCarouselItems);
-        setImageLoaded(false); // Resetar estado de carregamento da imagem
-        updateThumbnail(currentPageIndex, newCarouselItems);
-      })
-      .catch(error => {
-        console.error('Erro ao fazer upload da imagem:', error);
-      });
+    setImageUploading(true);
+    try {
+      const response = await axios.post('/post/upload', formData);
+      const imageUrl = "https://ws-booster-social-5040b10dd814.herokuapp.com" + response.data.url;
+      setImageUrl(imageUrl);
+      const newCarouselItems = [...carouselItems];
+      newCarouselItems[currentPageIndex].imageUrl = imageUrl;
+      setCarouselItems(newCarouselItems);
+      setImageLoaded(false);
+      updateThumbnail(currentPageIndex, newCarouselItems);
+    } catch (error) {
+      console.error('Erro ao fazer upload da imagem:', error);
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
+  const handleBackgroundImageChange = async (e) => {
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const response = await axios.post('/post/upload', formData);
+      const imageUrl = "https://ws-booster-social-5040b10dd814.herokuapp.com" + response.data.url;
+      setBackgroundImageUrl(imageUrl);
+    } catch (error) {
+      console.error('Erro ao fazer upload da imagem:', error);
+    }
   };
 
   const handleRemoveImage = () => {
     const newCarouselItems = [...carouselItems];
-    newCarouselItems[currentPageIndex].imageUrl = null; // Modifique apenas a imagem da página atual
+    newCarouselItems[currentPageIndex].imageUrl = null;
     setCarouselItems(newCarouselItems);
-    setImageLoaded(false); // Resetar estado de carregamento da imagem
+    setImageLoaded(false);
     updateThumbnail(currentPageIndex, newCarouselItems);
   };
 
   const handleImageLoad = () => {
-    setImageLoaded(true); // Atualizar estado quando a imagem for carregada
+    setImageLoaded(true);
   };
 
   const generatePngImages = async () => {
@@ -139,13 +151,12 @@ function Carrossel({ accessToken, userId }) {
       for (const [index, item] of carouselItems.entries()) {
         const element = previewBack.current;
         if (element) {
-          console.log(`Rendering item ${index}...`);
           setCurrentPageIndex(index);
-          await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for rendering
+          await new Promise(resolve => setTimeout(resolve, 2000));
 
-          if (!imageUrl || imageLoaded) { // Verificar se a imagem está carregada
+          if (!imageUrl || imageLoaded) {
             try {
-              const imgData = await toPng(element, { quality: 1 });
+              const imgData = await htmlToImage.toPng(element, { quality: 1 });
               images.push(imgData);
             } catch (error) {
               console.error(`Erro ao gerar imagem PNG para o item ${index}:`, error);
@@ -165,13 +176,21 @@ function Carrossel({ accessToken, userId }) {
 
   const handlePaletteSelect = (selectedPallete) => {
     setPalette(selectedPallete);
-    updateSVGColor(selectedPallete); // Update SVG color when palette is selected
+    updateSVGColor(selectedPallete);
     if (carouselItems.length > 0) {
       carouselItems.forEach((_, index) => updateThumbnail(index, carouselItems, selectedPallete));
     }
   };
 
   const updateSVGColor = (pallete) => {
+    if (backgroundDesign === 'none') {
+      if (previewBack.current) {
+        previewBack.current.style.backgroundImage = showBackgroundImage ? `url(${backgroundImageUrl})` : '';
+        previewBack.current.style.backgroundColor = showBackgroundImage ? '' : pallete[2];
+      }
+      return;
+    }
+
     fetch(`./assets/${backgroundDesign}.svg`)
       .then(response => response.text())
       .then(svgText => {
@@ -184,7 +203,8 @@ function Carrossel({ accessToken, userId }) {
           previewBack.current.style.backgroundImage = `url('data:image/svg+xml;base64,${btoa(coloredSvgText)}')`;
           previewBack.current.style.backgroundRepeat = 'no-repeat';
           previewBack.current.style.backgroundPosition = 'center';
-          previewBack.current.style.backgroundColor = pallete[3]; // Adicione esta linha para definir a cor de fundo como branco
+          previewBack.current.style.backgroundColor = showBackgroundImage ? '' : pallete[2];
+          previewBack.current.style.backgroundImage = showBackgroundImage ? `url(${backgroundImageUrl})` : `url('data:image/svg+xml;base64,${btoa(coloredSvgText)}')`;
         }
       })
       .catch(error => {
@@ -207,11 +227,7 @@ function Carrossel({ accessToken, userId }) {
         imagePosition: item.imagePosition,
         imageSize: item.imageSize,
         title: item.title,
-        text: item.text,
-        imagePositionX: item.imagePositionX,
-        imagePositionY: item.imagePositionY,
-        textPositionX: item.textPositionX,
-        textPositionY: item.textPositionY
+        text: item.text
       }));
 
       if (carouselId) {
@@ -255,29 +271,27 @@ function Carrossel({ accessToken, userId }) {
   const generatePDF = async () => {
     try {
       const doc = new jsPDF({
-        orientation: 'portrait', // Orientação retrato
-        unit: 'mm', // Unidade em milímetros
-        format: [119, 150] // Dimensões 119 x 150 mm
+        orientation: 'portrait',
+        unit: 'mm',
+        format: [119, 150]
       });
       console.log('Generating PDF...');
 
       for (const [index, item] of carouselItems.entries()) {
         const element = previewBack.current;
         if (element) {
-          console.log(`Rendering item ${index}...`);
           setCurrentPageIndex(index);
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for rendering
+          await new Promise(resolve => setTimeout(resolve, 1000));
 
-          const imgData = await toPng(element, {
+          const imgData = await htmlToImage.toPng(element, {
             quality: 1,
             width: element.offsetWidth,
             height: element.offsetHeight,
           });
 
-          const pdfWidth = 119; // Largura do PDF em mm
-          const pdfHeight = 150; // Altura do PDF em mm
+          const pdfWidth = 119;
+          const pdfHeight = 150;
 
-          // Manter a proporção da imagem ajustada às dimensões do PDF
           const aspectRatio = element.offsetHeight / element.offsetWidth;
           const adjustedHeight = pdfWidth * aspectRatio;
 
@@ -290,7 +304,14 @@ function Carrossel({ accessToken, userId }) {
       const pdfUrl = URL.createObjectURL(pdfBlob);
       console.log('PDF generated:', pdfUrl);
 
-      return pdfBlob; // Retornar o PDF Blob para upload posterior
+      setPdf(pdfBlob);
+
+      const link = document.createElement('a');
+      link.href = pdfUrl;
+      link.download = 'carousel.pdf';
+      link.click();
+
+      return pdfBlob;
     } catch (error) {
       console.error('Error generating PDF:', error);
       throw error;
@@ -313,7 +334,7 @@ function Carrossel({ accessToken, userId }) {
     if (previewBack.current === null) {
       return;
     }
-    toPng(previewBack.current)
+    htmlToImage.toPng(previewBack.current)
       .then((dataUrl) => {
         const link = document.createElement('a');
         link.download = 'carousel.png';
@@ -354,17 +375,12 @@ function Carrossel({ accessToken, userId }) {
       const items = fetchedCarousel.CarrosselItems.map(item => ({
         id: Date.now() + Math.random(),
         ...item,
-        imageSize: item.imageSize || 20,
-        imagePositionX: item.imagePositionX || 0,
-        imagePositionY: item.imagePositionY || 0,
-        textPositionX: item.textPositionX || 0,
-        textPositionY: item.textPositionY || 0,
+        imageSize: item.imageSize || 20
       }));
 
       setCarouselItems(items);
-      setCurrentPageIndex(0); // Start with the first item in edit mode
+      setCurrentPageIndex(0);
 
-      // Generate thumbnails for all items with correct palette
       items.forEach((_, index) => updateThumbnail(index, items, fetchedCarousel.palette || ['#5567C9', '#C3C5F5', '#F8F9FD']));
     } catch (error) {
       console.error('Error fetching carousel data:', error);
@@ -375,6 +391,7 @@ function Carrossel({ accessToken, userId }) {
     const origem = document.getElementById("origem").value;
     const origemId = document.getElementById("origemId").value;
 
+    setTitleLoading(true);
     try {
       const payload = {
         userId: userId,
@@ -385,9 +402,6 @@ function Carrossel({ accessToken, userId }) {
       const response = await axios.post('/carrossel/getIdeiasCarrossel', payload);
       const { slideIdeas } = response.data;
 
-      console.log('slideIdeas:', slideIdeas); // Log para verificar a resposta
-
-      // Corrigindo o parse dos dados retornados
       const ideasArray = slideIdeas.split('\n\n').map(idea => {
         try {
           return JSON.parse(idea.replace(/\n/g, ''));
@@ -397,31 +411,23 @@ function Carrossel({ accessToken, userId }) {
         }
       }).filter(idea => idea !== null);
 
-      console.log('ideasArray:', ideasArray); // Log para verificar o array processado
-
       const newSlides = ideasArray.map(slideIdea => ({
         id: Date.now() + Math.random(),
         title: slideIdea.titulo,
         text: slideIdea.conteudo,
         imageUrl: null,
         imagePosition: 'top',
-        imageSize: 20,
-        imagePositionX: 0,
-        imagePositionY: 0,
-        textPositionX: 0,
-        textPositionY: 0,
+        imageSize: 20
       }));
 
-      console.log('newSlides:', newSlides); // Log para verificar os novos slides
-
-      // Limpar páginas anteriores e definir novas
       setCarouselItems(newSlides);
       setCurrentPageIndex(0);
 
-      // Gerar miniaturas para todos os novos slides
       newSlides.forEach((_, index) => updateThumbnail(index, newSlides));
     } catch (error) {
       console.error('Error generating title:', error);
+    } finally {
+      setTitleLoading(false);
     }
   };
 
@@ -430,15 +436,13 @@ function Carrossel({ accessToken, userId }) {
     const paletteToUse = selectedPalette || palette;
 
     if (element && items[index]) {
-      // Temporarily update the previewBack with the palette for thumbnail generation
       updateSVGColor(paletteToUse);
 
-      const dataUrl = await createThumbnail(element);
+      const dataUrl = await htmlToImage.toPng(element);
       const newCarouselItems = [...items];
       newCarouselItems[index].thumbnail = dataUrl;
       setCarouselItems(newCarouselItems);
 
-      // Restore the original palette
       updateSVGColor(palette);
     }
   };
@@ -459,39 +463,52 @@ function Carrossel({ accessToken, userId }) {
 
   const postToLinkedIn = async () => {
     try {
-        // 1. Gerar o PDF
-        const pdfBlob = await generatePDF();
+      const pdfBlob = await generatePDF();
 
-        // 2. Fazer o upload do PDF
-        const formData = new FormData();
-        formData.append('file', pdfBlob, 'carousel.pdf');
+      const formData = new FormData();
+      formData.append('file', pdfBlob, 'carousel.pdf');
 
-        const uploadResponse = await axios.post('/post/upload', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        });
+      const uploadResponse = await axios.post('/post/uploadPdf', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
 
-        console.log(uploadResponse.data.url);
+      const filePath = "https://ws-booster-social-5040b10dd814.herokuapp.com" + uploadResponse.data.url;
 
-        const filePath = "https://ws-booster-social-5040b10dd814.herokuapp.com" + uploadResponse.data.url;
+      await axios.post('https://postlinkedin-229725447ae4.herokuapp.com/post_carrossel', {
+        accessToken,
+        commentary: postText,
+        pdf_url: filePath
+      });
 
-        console.log(filePath);
-
-        // 3. Fazer a postagem no LinkedIn
-        await axios.post('/post/post_carrossel', {
-            accessToken,
-            commentary: postText,
-            filePath
-        });
-
-        console.log('Post successfully published to LinkedIn');
+      console.log('Post successfully published to LinkedIn');
     } catch (error) {
-        console.error('Error posting to LinkedIn:', error);
+      console.error('Error posting to LinkedIn:', error);
     }
-};
+  };
 
-
+  const generatePost = async () => {
+    setLoading(true);
+    const currentTitle = document.getElementById('title').value;
+    const currentText = document.getElementById('text').value;
+    let response;
+    try {
+      if (selectedAi === 'llama3') {
+        response = await axios.post('/post/create-post-llama', { userId, idea: `${currentTitle}\n${currentText}` });
+      } else if (selectedAi === 'gpt') {
+        response = await axios.post('/post/create-post-gpt', { userId, idea: `${currentTitle}\n${currentText}` });
+      } else if (selectedAi === 'gemini') {
+        response = await axios.post('/post/create-post-gemini', { userId, idea: `${currentTitle}\n${currentText}` });
+      }
+      const { title, content } = response.data.post;
+      setPostText(`${title}\n${content}`);
+    } catch (error) {
+      console.error('Error generating post:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -504,9 +521,13 @@ function Carrossel({ accessToken, userId }) {
       }
     };
 
-    fetchUserInfo();
-    fetchCarousels();
-  }, [accessToken]);
+    if (accessToken && !userInfo) {
+      fetchUserInfo();
+    }
+    if (userId) {
+      fetchCarousels();
+    }
+  }, [accessToken, userId]);
 
   useEffect(() => {
     if (carouselItems.length > 0 && currentPageIndex < carouselItems.length) {
@@ -520,7 +541,7 @@ function Carrossel({ accessToken, userId }) {
   }, [currentPageIndex, carouselItems]);
 
   useEffect(() => {
-    updateSVGColor(palette); // Initial SVG color update when component mounts
+    updateSVGColor(palette);
   }, [backgroundDesign, palette]);
 
   useEffect(() => {
@@ -529,44 +550,31 @@ function Carrossel({ accessToken, userId }) {
     }
   }, [backgroundDesign, palette]);
 
-  const handleDragStop = (e, data, type) => {
-    const newCarouselItems = [...carouselItems];
-    if (type === 'image') {
-      newCarouselItems[currentPageIndex].imagePositionX = data.x;
-      newCarouselItems[currentPageIndex].imagePositionY = data.y;
-    } else if (type === 'text') {
-      newCarouselItems[currentPageIndex].textPositionX = data.x;
-      newCarouselItems[currentPageIndex].textPositionY = data.y;
-    }
-    setCarouselItems(newCarouselItems);
-    updateThumbnail(currentPageIndex, newCarouselItems);
-  };
-
   return (
     <CContainer className="p-10" onClick={handleContainerClick}>
       <CNav variant="tabs">
         <CNavItem>
           <CNavLink
-            active={activeTab === 0}
-            onClick={() => setActiveTab(0)}
+            active={activeTabIndex === 0}
+            onClick={() => setActiveTabIndex(0)}
           >
             + Create New
           </CNavLink>
         </CNavItem>
         <CNavItem>
           <CNavLink
-            active={activeTab === 1}
-            onClick={() => setActiveTab(1)}
+            active={activeTabIndex === 1}
+            onClick={() => setActiveTabIndex(1)}
           >
             My Carousels
           </CNavLink>
         </CNavItem>
       </CNav>
-      <CTabContent activeTab={activeTab}>
-        <CTabPane visible={activeTab === 0}>
+      <CTabContent activeTab={activeTabIndex}>
+        <CTabPane visible={activeTabIndex === 0}>
           <CRow className="mt-2">
             <CCol md="auto">
-              <CFormSelect id="origemId" value={textFontWeight} onChange={(e) => setTextFontWeight(e.target.value)}>
+              <CFormSelect id="origemId">
                 <option value="url">URL</option>
                 <option value="youtube">Youtube</option>
                 <option value="ai">AI</option>
@@ -580,8 +588,8 @@ function Carrossel({ accessToken, userId }) {
                   id="origem"
                 />
                 <CInputGroupText>
-                  <CButton id="btGeraTitulo" color="warning" onClick={handleGenerateTitle} >
-                    <i className="fa fa-bolt"></i>
+                  <CButton id="btGeraTitulo" color="warning" onClick={handleGenerateTitle} disabled={titleLoading}>
+                    {titleLoading ? <CSpinner size="sm" /> : <i className="fa fa-bolt"></i>}
                   </CButton>
                 </CInputGroupText>
               </CInputGroup>
@@ -595,36 +603,60 @@ function Carrossel({ accessToken, userId }) {
           </CRow>
           <CRow className="mt-1">
             <CCol md={5}>
-              <div id="divBack" ref={previewBack} className="containerBack">
-                <div id="divRef" ref={previewRef} className='containerRef'>
+              <div id="divBack" ref={previewBack} className="containerBack" style={{ backgroundColor: palette[2], backgroundImage: showBackgroundImage ? `url(${backgroundImageUrl})` : '', backgroundSize: 'cover', position: 'relative' }}>
+                <div style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)', position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }} />
+                <div id="divRef" ref={previewRef} className='containerRef' style={{ position: 'relative' }}>
                   {carouselItems[currentPageIndex] && imagePosition === 'top' && imageUrl && (
-                    <Draggable bounds="parent" position={{ x: carouselItems[currentPageIndex].imagePositionX, y: carouselItems[currentPageIndex].imagePositionY }} onStop={(e, data) => handleDragStop(e, data, 'image')}>
-                      <CImage id="imageId" src={imageUrl} alt="Image" style={{ width: `${imageSize}%`, transform: 'translateX(-50%)', position: 'relative', marginBottom: '20px', objectFit: 'contain' }} className={`highlightable-div ${selectedDiv === 1 ? 'selected' : ''}`} onClick={(e) => handleDivClick(e, 1)} onLoad={handleImageLoad} />
-                    </Draggable>
+                    <CImage id="imageId" src={imageUrl} alt="Image" style={{ width: `${imageSize}%`, transform: 'translateX(-50%)', position: 'relative', marginBottom: '20px', objectFit: 'contain' }} className={`highlightable-div ${selectedDiv === 1 ? 'selected' : ''}`} onClick={(e) => handleDivClick(e, 1)} onLoad={handleImageLoad} />
                   )}
                   {carouselItems[currentPageIndex] && (
-                    <Draggable bounds="parent" position={{ x: carouselItems[currentPageIndex].textPositionX, y: carouselItems[currentPageIndex].textPositionY }} onStop={(e, data) => handleDragStop(e, data, 'text')}>
-                      <div className={`highlightable-div ${selectedDiv === 2 ? 'selected' : ''}`} style={{ transform: 'translateX(-50%)', position: 'relative' }} onClick={(e) => handleDivClick(e, 2)}>
-                        {showSlideNumber && currentPageIndex > 0 && (
-                          <div style={{ position: 'absolute', top: '-20px', left: '5%', transform: 'translateX(-50%)', background: palette[0], borderRadius: '50%', width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>
-                            {currentPageIndex}
-                          </div>
-                        )}
-                        <CCardTitle style={{ fontFamily: titleFont, paddingTop: '20px', fontWeight: titleFontWeight, fontSize: fontSize === 'Small' ? '16px' : (fontSize === 'Medium' ? '24px' : '32px'), color: palette[0] }}>{title}</CCardTitle>
-                        <CCardText style={{ fontFamily: textFont, paddingTop: '20px', fontWeight: textFontWeight, fontSize: fontSize === 'Small' ? '12px' : (fontSize === 'Medium' ? '16px' : '20px'), color: palette[1] }}>{text}</CCardText>
-                      </div>
-                    </Draggable>
+                    <div style={{ width: '100%', height: '100%' }}>
+                      {showSlideNumber && currentPageIndex > 0 && (
+                        <div style={{ position: 'absolute', top: '-20px', left: '5%', transform: 'translateX(-50%)', background: palette[0], borderRadius: '50%', width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>
+                          {currentPageIndex}
+                        </div>
+                      )}
+                      <CCardTitle style={{ fontFamily: titleFont, paddingTop: '20px', fontWeight: titleFontWeight, fontSize: fontSize === 'Small' ? '16px' : (fontSize === 'Medium' ? '24px' : '32px'), color: palette[0] }}>{title}</CCardTitle>
+
+                      {showQuotationMarks && <QuoteIcon color={palette[0]} />}
+
+                      <CFormTextarea
+                        id="text"
+                        rows="3"
+                        disabled
+                        style={{
+                          fontFamily: textFont,
+                          fontWeight: textFontWeight,
+                          fontSize: fontSize === 'Small' ? '12px' : (fontSize === 'Medium' ? '16px' : '20px'),
+                          color: palette[1],
+                          backgroundColor: 'transparent',
+                          marginTop: '5px',
+                          padding: 'none',
+                          marginLeft: 'none',
+                          border: 'none',
+                          resize: 'none',
+                          width: '100%',
+                          height: '100%'
+                        }}
+                        value={text}
+                        onChange={(e) => {
+                          setText(e.target.value);
+                          const newCarouselItems = [...carouselItems];
+                          newCarouselItems[currentPageIndex].text = e.target.value;
+                          setCarouselItems(newCarouselItems);
+                          updateThumbnail(currentPageIndex, newCarouselItems);
+                        }}
+                      />
+                    </div>
                   )}
                   {carouselItems[currentPageIndex] && imagePosition === 'bottom' && imageUrl && (
-                    <Draggable bounds="parent" position={{ x: carouselItems[currentPageIndex].imagePositionX, y: carouselItems[currentPageIndex].imagePositionY }} onStop={(e, data) => handleDragStop(e, data, 'image')}>
-                      <CImage id="imageId" src={imageUrl} alt="Image" style={{ width: `${imageSize}%`, transform: 'translateX(-50%)', position: 'relative', marginBottom: '20px', objectFit: 'contain' }} className={`highlightable-div ${selectedDiv === 1 ? 'selected' : ''}`} onClick={(e) => handleDivClick(e, 1)} onLoad={handleImageLoad} />
-                    </Draggable>
+                    <CImage id="imageId" src={imageUrl} alt="Image" style={{ width: `${imageSize}%`, transform: 'translateX(-50%)', position: 'relative', marginBottom: '20px', objectFit: 'contain' }} className={`highlightable-div ${selectedDiv === 1 ? 'selected' : ''}`} onClick={(e) => handleDivClick(e, 1)} onLoad={handleImageLoad} />
                   )}
                 </div>
-                <div className="css-vmpweq" style={{ gridRow: '3 / 4', display: 'flex', left: '30px', justifyContent: 'flex-start', gap: '0.417857rem', marginTop: '20px', bottom: "30px", position: "absolute", alignItems: "flex-start" }}>
-                  {showHeadshot && userInfo && <CImage src={userInfo.picture} alt="Headshot" style={{ width: '40px', borderRadius: '50%', margin: '10px 0' }} />}
+                <div className="css-vmpweq" style={{ gridRow: '3 / 4', display: 'flex', left: '30px', justifyContent: 'flex-start', gap: '0.417857rem', marginTop: '20px', bottom: headerPosition === 'bottom' ? '30px' : 'auto', top: headerPosition === 'top' ? '20px' : 'auto', position: "absolute", alignItems: "flex-start" }}>
+                  {showHeadshot && userInfo && <CImage src={userInfo.picture} alt="Headshot" style={{ width: '60px', borderRadius: '50%', margin: '10px 0' }} />}
                   <div className="css-0" style={{ display: 'flex', flexDirection: 'column' }}>
-                    {showName && userInfo && <CCardTitle style={{ fontSize: "0.73125rem", gap: '0.417857rem', paddingTop: '10px', color: palette[0] }}>{userInfo.name}</CCardTitle>}
+                    {showName && userInfo && <CCardTitle style={{ fontSize: "0.83125rem", gap: '0.417857rem', paddingTop: '10px', color: palette[0] }}>{userInfo.name}</CCardTitle>}
                     {showLinkedinHandle && userInfo && <CCardText style={{ fontSize: "0.70rem", gap: '0.417857rem', paddingTop: '5px', color: palette[1] }}>@{userInfo.given_name}</CCardText>}
                   </div>
                 </div>
@@ -658,6 +690,10 @@ function Carrossel({ accessToken, userId }) {
                             />
                           </div>
                           <div className="mb-3">
+                            <CFormSwitch label="Show Quotation Marks" id="showQuotMarks" 
+                              checked={showQuotationMarks}
+                              onChange={(e) => setShowQuotationMarks(e.target.checked)}
+                            />
                             <CFormLabel htmlFor="text">Text</CFormLabel>
                             <CFormTextarea
                               id="text"
@@ -670,6 +706,15 @@ function Carrossel({ accessToken, userId }) {
                                 setCarouselItems(newCarouselItems);
                                 updateThumbnail(currentPageIndex, newCarouselItems);
                               }}
+                              onKeyUp={(e) => {
+                                if (e.key === 'Enter') {
+                                  setText(e.target.value);
+                                  const newCarouselItems = [...carouselItems];
+                                  newCarouselItems[currentPageIndex].text = e.target.value;
+                                  setCarouselItems(newCarouselItems);
+                                  updateThumbnail(currentPageIndex, newCarouselItems);
+                                }
+                              }}
                             />
                           </div>
                           <div className="mb-3">
@@ -677,7 +722,9 @@ function Carrossel({ accessToken, userId }) {
                               type="file"
                               id="image"
                               onChange={handleImageChange}
+                              disabled={imageUploading}
                             />
+                            {imageUploading && <CSpinner size="sm" />}
                             {imageUrl && (
                               <div className="mt-2 position-relative" style={{ display: 'inline-block' }}>
                                 <CImage src={imageUrl} thumbnail alt="Selected Image" width="120" />
@@ -808,6 +855,13 @@ function Carrossel({ accessToken, userId }) {
                               onChange={(e) => setShowSlideNumber(e.target.checked)}
                             />
                           </div>
+                          <div className="mb-3">
+                            <CFormLabel htmlFor="headerPosition">Header Position</CFormLabel>
+                            <CFormSelect id="headerPosition" value={headerPosition} onChange={(e) => setHeaderPosition(e.target.value)}>
+                              <option value="top">Top</option>
+                              <option value="bottom">Bottom</option>
+                            </CFormSelect>
+                          </div>
                         </CForm>
                       </CCardBody>
                     </CCard>
@@ -826,6 +880,7 @@ function Carrossel({ accessToken, userId }) {
                               onChange={(e) => setUseCustomColors(e.target.checked)}
                             />
                             <CFormSelect id="backgroundDesign" value={backgroundDesign} onChange={(e) => setBackgroundDesign(e.target.value)}>
+                              <option value="none">None</option>
                               <option value="blobs">Blobs</option>
                               <option value="blur-scribble">Blur & Scribble</option>
                               <option value="blurs-1">Blurs 1</option>
@@ -838,7 +893,20 @@ function Carrossel({ accessToken, userId }) {
                               <option value="triangles">Triangles</option>
                             </CFormSelect>
                           </div>
-                          <PaletteSelector onSelect={handlePaletteSelect} /> {/* Use the new component here */}
+                          <PaletteSelector onSelect={handlePaletteSelect} />
+                          <div className="mb-3">
+                            <CFormSwitch label="Image Background" id="showBackgroundImage" 
+                              checked={showBackgroundImage}
+                              onChange={(e) => setShowBackgroundImage(e.target.checked)}
+                            />
+                            {showBackgroundImage && (
+                              <CFormInput
+                                type="file"
+                                id="backgroundImage"
+                                onChange={handleBackgroundImageChange}
+                              />
+                            )}
+                          </div>
                         </CForm>
                       </CCardBody>
                     </CCard>
@@ -862,14 +930,52 @@ function Carrossel({ accessToken, userId }) {
             </CCol>
             <CCol>
               <CFormLabel htmlFor="postText">Post Text</CFormLabel>
-              <CFormTextarea 
-                id="postText"
-                rows="3"
-                value={postText}
-                onChange={(e) => setPostText(e.target.value)}
-                style={{ width: '500px' }} // Defina a largura desejada aqui
-
-              />
+              <CInputGroup>
+                <CFormTextarea
+                  id="postText"
+                  rows="3"
+                  value={postText}
+                  onChange={(e) => setPostText(e.target.value)}
+                  style={{ width: '500px' }}
+                />
+                <CInputGroupText>
+                  <CButton id="btGeraPost" color="primary" onClick={generatePost} disabled={loading}>
+                    {loading ? <CSpinner size="sm" /> : 'Gerar Post'}
+                  </CButton>
+                </CInputGroupText>
+              </CInputGroup>
+              <CButtonGroup role="group" aria-label="Basic radio toggle button group" className="mt-3">
+                <CFormCheck
+                  type="radio"
+                  button={{ color: 'primary', variant: 'outline' }}
+                  name="btnradioAi"
+                  id="btnradioAi1"
+                  autoComplete="off"
+                  label="Llama 3"
+                  checked={selectedAi === 'llama3'}
+                  onChange={() => setSelectedAi('llama3')}
+                />
+                <CFormCheck
+                  type="radio"
+                  button={{ color: 'primary', variant: 'outline' }}
+                  name="btnradioAi"
+                  id="btnradioAi2"
+                  autoComplete="off"
+                  label="GPT"
+                  checked={selectedAi === 'gpt'}
+                  onChange={() => setSelectedAi('gpt')}
+                />
+                <CFormCheck
+                  type="radio"
+                  button={{ color: 'primary', variant: 'outline' }}
+                  name="btnradioAi"
+                  id="btnradioAi3"
+                  autoComplete="off"
+                  label="Gemini"
+                  checked={selectedAi === 'gemini'}
+                  onChange={() => setSelectedAi('gemini')}
+                />
+              </CButtonGroup>
             </CCol>
           </CRow>
           <CRow className="mt-4">
@@ -884,10 +990,9 @@ function Carrossel({ accessToken, userId }) {
                 Post to LinkedIn
               </CButton>
             </CCol>
-
           </CRow>
         </CTabPane>
-        <CTabPane visible={activeTab === 1}>
+        <CTabPane visible={activeTabIndex === 1}>
           <h4 className="mt-4">My Carousels</h4>
           {carousels.map(carousel => (
             <CCard key={carousel.id} className="mb-3">
@@ -898,7 +1003,7 @@ function Carrossel({ accessToken, userId }) {
                     <CCardText>{carousel.CarrosselItems[0].text}</CCardText>
                   </>
                 )}
-                <CButton color="info" className="me-2" onClick={() => { setActiveTab(0); setCarouselId(carousel.id); initializeEditCarousel(carousel); }}>
+                <CButton color="info" className="me-2" onClick={() => { setActiveTabIndex(0); setCarouselId(carousel.id); initializeEditCarousel(carousel); }}>
                   <CIcon icon={cilPencil} /> Edit
                 </CButton>
                 <CButton color="danger" onClick={() => deleteCarousel(carousel.id)}>
