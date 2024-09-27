@@ -36,6 +36,19 @@
 
 .nav-link:hover {
   background-color: #495057;
+  color: #cf0909;
+}
+
+.dark-mode .nav-link {
+  color: #ebecee;
+}
+
+.dark-mode .nav-link:hover {
+  background-color: #495057;
+  color: #ffffff;
+}
+
+.dark-mode .nav-icon {
   color: #ffffff;
 }
 

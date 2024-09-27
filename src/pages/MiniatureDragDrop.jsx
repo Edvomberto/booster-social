@@ -17,22 +17,27 @@ const MiniatureDragDrop = ({ carouselItems, setCarouselItems, setCurrentPageInde
   };
 
   const handleAddItemWithLimit = () => {
-    if (carouselItems.length < 8) {
+    if (carouselItems.length < 7) {
       handleAddItem();
     } else {
-      alert("O número máximo de páginas é 8.");
+      alert("O número máximo de páginas é 7.");
     }
   };
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <Droppable droppableId="droppable" direction="horizontal">
+      <Droppable droppableId="droppable" direction="vertical">
         {(provided) => (
           <div
             className="dropzone"
             {...provided.droppableProps}
             ref={provided.innerRef}
-            style={{ display: 'flex', overflowX: 'auto', padding: '10px', whiteSpace: 'nowrap' }} // Adicionei estilo para suportar rolagem horizontal
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '10px',
+              padding: '10px'
+            }}
           >
             {carouselItems.map((item, index) => (
               <Draggable key={item.id} draggableId={`draggable-${item.id}`} index={index}>
@@ -44,8 +49,11 @@ const MiniatureDragDrop = ({ carouselItems, setCarouselItems, setCurrentPageInde
                     {...provided.dragHandleProps}
                     style={{
                       ...provided.draggableProps.style,
-                      width: '100px', // Definindo largura fixa
-                      margin: '0 10px' // Espaçamento entre as miniaturas
+                      width: '100px',
+                      height: '130px',
+                      margin: '0 10px 10px 0', // Espaçamento entre as miniaturas
+                      boxSizing: 'border-box',
+                      position: 'relative'
                     }}
                     onClick={() => setCurrentPageIndex(index)}
                   >
@@ -79,6 +87,7 @@ const MiniatureDragDrop = ({ carouselItems, setCarouselItems, setCurrentPageInde
                         cursor: 'pointer',
                         color: 'white',
                         fontSize: '12px',
+                        
                       }}
                     >
                       &times;
@@ -90,7 +99,7 @@ const MiniatureDragDrop = ({ carouselItems, setCarouselItems, setCurrentPageInde
             {provided.placeholder}
             <div
               className="m-2 d-flex align-items-center justify-content-center"
-              style={{ width: '100px', height: '130px', border: '1px dashed #ccc', cursor: 'pointer' }}
+              style={{ width: '100px', height: '130px', border: '1px dashed #ccc', cursor: 'pointer', boxSizing: 'border-box' }}
               onClick={handleAddItemWithLimit}
             >
               <CIcon icon={cilPlus} size="xl" />

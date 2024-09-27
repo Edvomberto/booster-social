@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CSidebar, CSidebarNav, CNavItem, CSidebarHeader, CSidebarBrand, CAvatar, CSidebarFooter, CPopover, CSidebarToggler } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-import { cilSpeedometer, cilCalendar, cilAlarm, cilLayers, cilAccountLogout, cilSettings, cilSatelite } from '@coreui/icons';
+import { cilSpeedometer, cilCalendar, cilAlarm, cilAccountLogout, cilSettings, cilSatelite } from '@coreui/icons';
 import axios from '../axiosConfig';
 
 const Sidebar = ({ handleLogout, userId }) => {
@@ -26,6 +26,8 @@ const Sidebar = ({ handleLogout, userId }) => {
         const userDetails = userResponse.data;
         setCredits(userDetails.credits);
         setSubscriptionDate(new Date(userDetails.subscriptionDate));
+        // Aplicar o tema baseado na configuração do usuário
+        document.body.classList.toggle('dark-mode', response.data.darkMode);
       } catch (error) {
         console.error('Error fetching user info:', error);
       }
@@ -60,16 +62,15 @@ const Sidebar = ({ handleLogout, userId }) => {
     >
       <CSidebarHeader className="border-bottom">
         <CSidebarBrand>
-          <img src="./assets/logo.png" alt="Logotipo do Produto" style={{ height: '40px' }} />
+          <img src="./assets/logo.png" alt="Logotipo do Produto" href='/' style={{ height: '40px' }} />
         </CSidebarBrand>
       </CSidebarHeader>
       <CSidebarNav>
-        <CNavItem href="/"><CIcon customClassName="nav-icon" icon={cilSpeedometer} /> {t('dashboard')}</CNavItem>
-        <CNavItem href="/booster-social/settings"><CIcon customClassName="nav-icon" icon={cilCalendar} /> {t('schedules')}</CNavItem>
-        <CNavItem href="/"><CIcon customClassName="nav-icon" icon={cilAlarm} /> {t('alerts')}</CNavItem>
-        <CNavItem href="/booster-social/settings"><CIcon customClassName="nav-icon" icon={cilSettings} /> {t('settings')}</CNavItem>
-        <CNavItem href="/booster-social/carrossel"><CIcon customClassName="nav-icon" icon={cilSatelite} /> {t('carousel')}</CNavItem>
-
+        <CNavItem href="/"><CIcon customClassName="nav-icon c-icon" icon={cilSpeedometer} /> {t('dashboard')}</CNavItem>
+        <CNavItem href="/booster-social/settings"><CIcon customClassName="nav-icon c-icon" icon={cilCalendar} /> {t('schedules')}</CNavItem>
+        <CNavItem href="/booster-social/post-generation"><CIcon customClassName="nav-icon c-icon" icon={cilAlarm} /> {t('alerts')}</CNavItem>
+        <CNavItem href="/booster-social/settings"><CIcon customClassName="nav-icon c-icon" icon={cilSettings} /> {t('settings')}</CNavItem>
+        <CNavItem href="/booster-social/carrossel"><CIcon customClassName="nav-icon c-icon" icon={cilSatelite} /> {t('carousel')}</CNavItem>
       </CSidebarNav>
       <CSidebarFooter className="d-flex align-items-center">
         {userInfo && (
@@ -91,9 +92,8 @@ const Sidebar = ({ handleLogout, userId }) => {
         )}
       </CSidebarFooter>
       <CSidebarHeader className="border-top">
-          <CIcon onClick={handleLogout} customClassName="nav-icon" icon={cilAccountLogout} cursor="hand"/>
+        <CIcon onClick={handleLogout} customClassName="nav-icon c-icon" icon={cilAccountLogout} cursor="hand"/>
       </CSidebarHeader>
-      
     </CSidebar>
   );
 };

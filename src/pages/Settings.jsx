@@ -9,26 +9,24 @@ import {
   CForm,
   CFormLabel,
   CFormInput,
-  CFormCheck,
-  CFormSelect,
   CFormSwitch,
   CFormRange,
   CButton,
-  CAvatar
+  CAvatar,
+  CFormSelect
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilLink, cilTrash, cilReload } from '@coreui/icons';
 import { useTranslation } from 'react-i18next';
 import axios from '../axiosConfig';
 
-const Settings = ({ accessToken, setAccessToken }) => {
+const Settings = ({ accessToken, setAccessToken, darkMode, setDarkMode }) => {
   const { t, i18n } = useTranslation();
 
   const [settings, setSettings] = useState({
     email: '',
     name: '',
     timezone: '',
-    darkMode: false,
     rtlText: false,
     linkedIn: '',
     language: 'pt',
@@ -44,6 +42,7 @@ const Settings = ({ accessToken, setAccessToken }) => {
       try {
         const response = await axios.get('/user/1'); // Supondo que o ID do usuário seja 1
         setSettings(response.data);
+        setDarkMode(response.data.darkMode); // Atualizar darkMode a partir das configurações do usuário
       } catch (error) {
         console.error('Error fetching user settings:', error);
       }
@@ -72,7 +71,7 @@ const Settings = ({ accessToken, setAccessToken }) => {
     if (savedLanguage) {
       i18n.changeLanguage(savedLanguage);
     }
-  }, [accessToken, i18n]);
+  }, [accessToken, i18n, setDarkMode]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -80,6 +79,10 @@ const Settings = ({ accessToken, setAccessToken }) => {
       ...prevSettings,
       [name]: type === 'checkbox' ? checked : value
     }));
+    // Atualizar darkMode diretamente ao alterar a configuração
+    if (name === 'darkMode') {
+      setDarkMode(checked);
+    }
   };
 
   const handleLanguageChange = (e) => {
@@ -94,7 +97,7 @@ const Settings = ({ accessToken, setAccessToken }) => {
 
   const handleSubmit = async () => {
     try {
-      const response = await axios.put(`/user/1`, settings); // Supondo que o ID do usuário seja 1
+      const response = await axios.put(`/user/1`, { ...settings, darkMode }); // Supondo que o ID do usuário seja 1
       console.log(response.data);
     } catch (error) {
       console.error('Error updating settings:', error);
@@ -116,13 +119,8 @@ const Settings = ({ accessToken, setAccessToken }) => {
 
   return (
     <CContainer>
-      <CRow className="mb-4">
-        <CCol>
-          <h2>{t('settings')}</h2>
-        </CCol>
-      </CRow>
-      <CRow>
-        <CCol md={6}>
+      <CRow className='mt-4'>
+        <CCol md={6} >
           <CCard>
             <CCardHeader>{t('account_settings')}</CCardHeader>
             <CCardBody>
@@ -148,10 +146,9 @@ const Settings = ({ accessToken, setAccessToken }) => {
                   label={t('dark_mode')} 
                   id="formSwitchCheckChecked" 
                   name="darkMode"
-                  checked={settings.darkMode} 
+                  checked={darkMode} 
                   onChange={handleChange} 
                 />
-
               </CForm>
             </CCardBody>
           </CCard>
@@ -241,7 +238,6 @@ const Settings = ({ accessToken, setAccessToken }) => {
                   min="0"
                   max="100"
                 />
-
 
                 <CFormLabel>{t('ai_model')}</CFormLabel>
                 <CFormSelect name="aiModel" value={settings.aiModel} onChange={handleChange}>

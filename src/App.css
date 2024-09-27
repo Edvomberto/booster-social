@@ -1,4 +1,6 @@
-/* App.css */
+/* src/App.css */
+
+/* Estilo padrão (claro) */
 body, html, #root {
   width: 100%;
   height: 100%;
@@ -33,6 +35,7 @@ body, html, #root {
   height: 24px;
   display: block;
   margin: 0 auto; /* Centralizar os ícones */
+  color: #ff0000;
 }
 
 .c-header {
@@ -138,8 +141,7 @@ body, html, #root {
   color: #ff0000;
 }
 
-
-/* src/App.css */
+/* Estilos para sidebar */
 .sidebar-full-height {
   height: 100vh; /* Define a altura da sidebar para 100% da altura da tela */
   display: flex;
@@ -165,4 +167,131 @@ body, html, #root {
   justify-content: center;
 }
 
+/* Tema Escuro */
+.dark-mode .body {
+  background-color: #151515;
+  color: #ffffff;
+}
+
+.dark-mode {
+  background-color: #121212;
+  color: #ffffff;
+}
+
+.dark-mode .c-header {
+  background-color: #1f1f1f;
+  border-bottom: 1px solid #333;
+}
+
+.dark-mode .c-header-brand {
+  color: #ffffff;
+}
+
+.dark-mode .content {
+  background-color: #1f1f1f;
+  color: #ffffff;
+}
+
+.dark-mode .task-form {
+  background-color: #1f1f1f;
+  color: #ffffff;
+}
+
+.dark-mode .c-card {
+  background-color: #1f1f1f;
+  color: #ffffff;
+}
+
+.dark-mode .card-header {
+  background-color: #262626;
+  color: #ffffff;
+}
+
+.dark-mode .card-body {
+  background-color: #373737;
+  color: #ffffff;
+}
+
+.dark-mode .c-form-input,
+.dark-mode .c-form-select,
+.dark-mode .c-form-textarea,
+.dark-mode .c-form-label {
+  background-color: #333;
+  color: #ffffff;
+  border: 1px solid #555;
+}
+
+.dark-mode .c-button,
+.dark-mode .c-button-primary,
+.dark-mode .c-button-secondary {
+  background-color: #333;
+  color: #ffffff;
+  border: 1px solid #555;
+}
+
+.dark-mode .sidebar-full-height {
+  background-color: #1f1f1f;
+}
+
+.dark-mode .sidebar-narrow {
+  background-color: #1f1f1f;
+}
+
+.dark-mode .sidebar-narrow .nav-icon {
+  color: #ffffff;
+}
+
+.dark-mode .CSidebarFooter {
+  background-color: #1f1f1f;
+}
+
+.dark-mode .sidebar {
+  background-color: #1e1e1e;
+}
+
+.dark-mode .nav-link {
+  color: #adb5bd;
+}
+
+.dark-mode .nav-link:hover {
+  background-color: #495057;
+  color: #ffffff;
+}
+
+body.dark-mode .nav-link {
+  color: #cccccc;
+}
+
+body.dark-mode .nav-link:hover {
+  background-color: #3c3c3c;
+  color: #ffffff;
+}
+
+body.dark-mode .c-icon {
+  color: #cccccc;
+}
+
+body.dark-mode .dashboard-card {
+  background-color: #1f1f1f;
+  color: #ffffff;
+}
+
+body.dark-mode .c-button-group .btn {
+  background-color: #1f1f1f;
+  color: #ffffff;
+}
+
+body.dark-mode .c-button-group .btn-primary {
+  background-color: #3a3a3a;
+  color: #ffffff;
+}
+
+body.dark-mode .c-button-group .btn-secondary {
+  background-color: #1f1f1f;
+  color: #ffffff;
+}
+
+body.dark-mode .clickable:hover {
+  background-color: #3a3a3a;
+}
 

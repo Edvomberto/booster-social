@@ -26,7 +26,8 @@ function Carrossel({ accessToken, userId }) {
     text: 'Descubra como com a DKP',
     imageUrl: null,
     imagePosition: 'top',
-    imageSize: 20
+    imageSize: 20,
+    showQuotationMarks: false
   }]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [title, setTitle] = useState('');
@@ -62,6 +63,8 @@ function Carrossel({ accessToken, userId }) {
   const [backgroundImageUrl, setBackgroundImageUrl] = useState('');
   const [titleLoading, setTitleLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
+  const [organizations, setOrganizations] = useState([]);
+  const [selectedProfile, setSelectedProfile] = useState(null);
 
   const previewRef = useRef(null);
   const previewBack = useRef(null);
@@ -84,7 +87,8 @@ function Carrossel({ accessToken, userId }) {
       text: 'Novo Texto',
       imageUrl: null,
       imagePosition: 'top',
-      imageSize: 20
+      imageSize: 20,
+      showQuotationMarks: false
     };
     setCarouselItems([...carouselItems, newPage]);
     setCurrentPageIndex(carouselItems.length);
@@ -220,14 +224,52 @@ function Carrossel({ accessToken, userId }) {
     updateThumbnail(currentPageIndex, newCarouselItems);
   };
 
+  const resetCarousel = () => {
+    setCarouselId(null);
+    setCarouselItems([{
+      id: Date.now(),
+      title: 'Impulsione seu Negócio!',
+      text: 'Descubra como com a DKP',
+      imageUrl: null,
+      imagePosition: 'top',
+      imageSize: 20,
+      showQuotationMarks: false
+    }]);
+    setCurrentPageIndex(0);
+    setTitle('');
+    setText('');
+    setTitleFont('Inika');
+    setTitleFontWeight('Regular');
+    setTextFont('Inter');
+    setTextFontWeight('Regular');
+    setFontSize('Medium');
+    setShowHeadshot(false);
+    setShowName(false);
+    setShowLinkedinHandle(false);
+    setShowSlideNumber(false);
+    setBackgroundDesign('blobs');
+    setUseCustomColors(false);
+    setImageUrl('');
+    setImagePosition('top');
+    setImageSize(20);
+    setPalette(['#5567C9', '#C3C5F5', '#F8F9FD']);
+    setShowQuotationMarks(false);
+    setHeaderPosition('bottom');
+    setShowBackgroundImage(false);
+    setBackgroundImageUrl('');
+    setPostText('');
+  };
+
   const saveCarousel = async () => {
     try {
       const items = carouselItems.map(item => ({
         imageUrl: item.imageUrl,
-        imagePosition: item.imagePosition,
         imageSize: item.imageSize,
         title: item.title,
-        text: item.text
+        text: item.text,
+        showQuotationMarks: item.showQuotationMarks,
+        backgroundImageUrl: backgroundImageUrl,
+        showBackgroundImage
       }));
 
       if (carouselId) {
@@ -242,7 +284,8 @@ function Carrossel({ accessToken, userId }) {
           showLinkedinHandle,
           showSlideNumber,
           backGroundTheme: useCustomColors,
-          palette,
+          pallete: palette,
+          postText,
           items
         });
         console.log('Carousel updated');
@@ -259,6 +302,8 @@ function Carrossel({ accessToken, userId }) {
           showSlideNumber,
           backGroundTheme: useCustomColors,
           userId,
+          pallete: palette,
+          postText,
           items
         });
         console.log('Carousel saved');
@@ -370,16 +415,26 @@ function Carrossel({ accessToken, userId }) {
       setShowLinkedinHandle(fetchedCarousel.showLinkedinHandle);
       setShowSlideNumber(fetchedCarousel.showSlideNumber);
       setUseCustomColors(fetchedCarousel.backGroundTheme);
-      setPalette(fetchedCarousel.palette || ['#5567C9', '#C3C5F5', '#F8F9FD']);
+      setPalette(fetchedCarousel.pallete || ['#5567C9', '#C3C5F5', '#F8F9FD']);
+      setBackgroundImageUrl(fetchedCarousel.backgroundImageUrl || '');
+      setPostText(fetchedCarousel.postText || '');
 
       const items = fetchedCarousel.CarrosselItems.map(item => ({
         id: Date.now() + Math.random(),
         ...item,
-        imageSize: item.imageSize || 20
+        imageSize: item.imageSize || 20,
+        showQuotationMarks: item.showQuotationMarks,
+        backgroundImageUrl: item.backgroundImageUrl,
+        showBackgroundImage: item.showBackgroundImage
       }));
 
       setCarouselItems(items);
       setCurrentPageIndex(0);
+
+      setShowQuotationMarks(items[0].showQuotationMarks); // Atualiza o estado global com base no primeiro item
+      setBackgroundImageUrl(items[0].backgroundImageUrl); // Atualiza o estado global com base no primeiro item
+      setShowBackgroundImage(items[0].showBackgroundImage); // Atualiza o estado global com base no primeiro item
+
 
       items.forEach((_, index) => updateThumbnail(index, items, fetchedCarousel.palette || ['#5567C9', '#C3C5F5', '#F8F9FD']));
     } catch (error) {
@@ -403,10 +458,11 @@ function Carrossel({ accessToken, userId }) {
       const { slideIdeas } = response.data;
 
       const ideasArray = slideIdeas.split('\n\n').map(idea => {
+        const cleanedIdea = idea.replace(/```json|```/g, '');
         try {
-          return JSON.parse(idea.replace(/\n/g, ''));
+          return JSON.parse(cleanedIdea.replace(/\n/g, ''));
         } catch (e) {
-          console.error('Error parsing idea:', idea, e);
+          console.error('Error parsing idea:', cleanedIdea, e);
           return null;
         }
       }).filter(idea => idea !== null);
@@ -417,7 +473,8 @@ function Carrossel({ accessToken, userId }) {
         text: slideIdea.conteudo,
         imageUrl: null,
         imagePosition: 'top',
-        imageSize: 20
+        imageSize: 20,
+        showQuotationMarks: false
       }));
 
       setCarouselItems(newSlides);
@@ -475,11 +532,15 @@ function Carrossel({ accessToken, userId }) {
       });
 
       const filePath = "https://ws-booster-social-5040b10dd814.herokuapp.com" + uploadResponse.data.url;
+      const title = document.getElementById('title').value || document.getElementById('text').value.substring(0, 30);
+      const ownerId = selectedProfile ? (selectedProfile.sub || selectedProfile.idOrganization) : null;
+
 
       await axios.post('https://postlinkedin-229725447ae4.herokuapp.com/post_carrossel', {
         accessToken,
         commentary: postText,
-        pdf_url: filePath
+        pdf_url: filePath,
+        title
       });
 
       console.log('Post successfully published to LinkedIn');
@@ -510,22 +571,32 @@ function Carrossel({ accessToken, userId }) {
     }
   };
 
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {
-        const response = await axios.get(`https://postlinkedin-229725447ae4.herokuapp.com/get-user-info?access_token=${accessToken}`);
-        const userData = response.data;
-        setUserInfo(userData);
-      } catch (error) {
-        console.error('Error fetching user info:', error);
-      }
-    };
+  const fetchUserInfo = async () => {
+    try {
+      const response = await axios.get(`https://postlinkedin-229725447ae4.herokuapp.com/get-user-info?access_token=${accessToken}`);
+      const userData = response.data;
+      setUserInfo(userData);
+    } catch (error) {
+      console.error('Error fetching user info:', error);
+    }
+  };
 
+  const fetchOrganizations = async () => {
+    try {
+      const response = await axios.get('/organization/user/1');
+      setOrganizations(response.data);
+    } catch (error) {
+      console.error('Error fetching organizations:', error);
+    }
+  };
+
+  useEffect(() => {
     if (accessToken && !userInfo) {
       fetchUserInfo();
     }
     if (userId) {
       fetchCarousels();
+      fetchOrganizations();
     }
   }, [accessToken, userId]);
 
@@ -537,6 +608,7 @@ function Carrossel({ accessToken, userId }) {
       setImageUrl(currentPage.imageUrl);
       setImagePosition(currentPage.imagePosition);
       setImageSize(currentPage.imageSize);
+      setShowQuotationMarks(currentPage.showQuotationMarks);
     }
   }, [currentPageIndex, carouselItems]);
 
@@ -550,13 +622,19 @@ function Carrossel({ accessToken, userId }) {
     }
   }, [backgroundDesign, palette]);
 
+  const handleProfileSelect = (profile) => {
+    console.log(profile);
+    setSelectedProfile(profile);
+  };
+
   return (
-    <CContainer className="p-10" onClick={handleContainerClick}>
-      <CNav variant="tabs">
+    <CContainer className="p-10 mt-4" onClick={handleContainerClick}>
+      <CNav variant="tabs" className="mb-3 mt-4" style={{ cursor: 'pointer' }}>
         <CNavItem>
           <CNavLink
             active={activeTabIndex === 0}
-            onClick={() => setActiveTabIndex(0)}
+            onClick={() => { setActiveTabIndex(0); resetCarousel(); }}
+            style={{ textDecoration: 'none' }}
           >
             + Create New
           </CNavLink>
@@ -565,6 +643,7 @@ function Carrossel({ accessToken, userId }) {
           <CNavLink
             active={activeTabIndex === 1}
             onClick={() => setActiveTabIndex(1)}
+            style={{ textDecoration: 'none' }}
           >
             My Carousels
           </CNavLink>
@@ -580,18 +659,16 @@ function Carrossel({ accessToken, userId }) {
                 <option value="ai">AI</option>
               </CFormSelect>
             </CCol>
-            <CCol md={9}>
+            <CCol md={9} >
               <CInputGroup>
                 <CFormInput
                   type="text"
                   name="title"
                   id="origem"
                 />
-                <CInputGroupText>
-                  <CButton id="btGeraTitulo" color="warning" onClick={handleGenerateTitle} disabled={titleLoading}>
-                    {titleLoading ? <CSpinner size="sm" /> : <i className="fa fa-bolt"></i>}
-                  </CButton>
-                </CInputGroupText>
+                <CButton id="btGeraTitulo" color="warning" onClick={handleGenerateTitle} disabled={titleLoading}>
+                  {titleLoading ? <CSpinner size="sm" /> : <i className="fa fa-bolt"></i>}
+                </CButton>
               </CInputGroup>
             </CCol>
             <CCol md="auto" className="d-flex align-items-center">
@@ -601,24 +678,27 @@ function Carrossel({ accessToken, userId }) {
               </CButton>
             </CCol>
           </CRow>
-          <CRow className="mt-1">
+          <CRow className="mt-3">
             <CCol md={5}>
               <div id="divBack" ref={previewBack} className="containerBack" style={{ backgroundColor: palette[2], backgroundImage: showBackgroundImage ? `url(${backgroundImageUrl})` : '', backgroundSize: 'cover', position: 'relative' }}>
-                <div style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)', position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }} />
+                {showBackgroundImage && (
+                  <div style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)', position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }} />
+                )}
                 <div id="divRef" ref={previewRef} className='containerRef' style={{ position: 'relative' }}>
                   {carouselItems[currentPageIndex] && imagePosition === 'top' && imageUrl && (
                     <CImage id="imageId" src={imageUrl} alt="Image" style={{ width: `${imageSize}%`, transform: 'translateX(-50%)', position: 'relative', marginBottom: '20px', objectFit: 'contain' }} className={`highlightable-div ${selectedDiv === 1 ? 'selected' : ''}`} onClick={(e) => handleDivClick(e, 1)} onLoad={handleImageLoad} />
                   )}
                   {carouselItems[currentPageIndex] && (
-                    <div style={{ width: '100%', height: '100%' }}>
+                    <div style={{ width: '100%', height: '100%', marginTop: '50px' }}>
                       {showSlideNumber && currentPageIndex > 0 && (
                         <div style={{ position: 'absolute', top: '-20px', left: '5%', transform: 'translateX(-50%)', background: palette[0], borderRadius: '50%', width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>
                           {currentPageIndex}
                         </div>
                       )}
+                      {showQuotationMarks && <QuoteIcon color={palette[0]} />}
+
                       <CCardTitle style={{ fontFamily: titleFont, paddingTop: '20px', fontWeight: titleFontWeight, fontSize: fontSize === 'Small' ? '16px' : (fontSize === 'Medium' ? '24px' : '32px'), color: palette[0] }}>{title}</CCardTitle>
 
-                      {showQuotationMarks && <QuoteIcon color={palette[0]} />}
 
                       <CFormTextarea
                         id="text"
@@ -661,6 +741,29 @@ function Carrossel({ accessToken, userId }) {
                   </div>
                 </div>
               </div>
+              <MiniatureDragDrop
+                carouselItems={carouselItems}
+                setCarouselItems={setCarouselItems}
+                setCurrentPageIndex={setCurrentPageIndex}
+                handleAddItem={handleAddItem}
+                handleDeleteItem={handleDeleteItem}
+                titleFont={titleFont}
+                titleFontWeight={titleFontWeight}
+                palette={palette}
+              />
+              <CRow>
+                <CCol>
+                  <CButton color="secondary" className="me-2" onClick={saveCarousel}>
+                    <CIcon icon={cilSave} /> {carouselId ? 'Save' : 'Add'}
+                  </CButton>
+                  <CButton color="info" className="me-2" onClick={generatePDF}>
+                    <CIcon icon={cilCloudDownload} /> Download PDF
+                  </CButton>
+                  <CButton color="primary" onClick={postToLinkedIn}>
+                    Post to LinkedIn
+                  </CButton>
+                </CCol>
+              </CRow>
             </CCol>
             <CCol md={6}>
               <CTabs activeItemKey="profile">
@@ -690,7 +793,7 @@ function Carrossel({ accessToken, userId }) {
                             />
                           </div>
                           <div className="mb-3">
-                            <CFormSwitch label="Show Quotation Marks" id="showQuotMarks" 
+                            <CFormSwitch label="Show Quotation Marks" id="showQuotMarks"
                               checked={showQuotationMarks}
                               onChange={(e) => setShowQuotationMarks(e.target.checked)}
                             />
@@ -871,7 +974,6 @@ function Carrossel({ accessToken, userId }) {
                       <CCardBody>
                         <CForm>
                           <div className="mb-3">
-                            <CFormLabel htmlFor="backgroundDesign">Background Design Elements</CFormLabel>
                             <CFormCheck
                               type="checkbox"
                               id="backgroundDesign"
@@ -895,7 +997,7 @@ function Carrossel({ accessToken, userId }) {
                           </div>
                           <PaletteSelector onSelect={handlePaletteSelect} />
                           <div className="mb-3">
-                            <CFormSwitch label="Image Background" id="showBackgroundImage" 
+                            <CFormSwitch label="Image Background" id="showBackgroundImage"
                               checked={showBackgroundImage}
                               onChange={(e) => setShowBackgroundImage(e.target.checked)}
                             />
@@ -913,37 +1015,48 @@ function Carrossel({ accessToken, userId }) {
                   </CTabPanel>
                 </CTabContent>
               </CTabs>
-            </CCol>
-          </CRow>
-          <CRow className='mt-8'>
-            <CCol >
-              <MiniatureDragDrop
-                carouselItems={carouselItems}
-                setCarouselItems={setCarouselItems}
-                setCurrentPageIndex={setCurrentPageIndex}
-                handleAddItem={handleAddItem}
-                handleDeleteItem={handleDeleteItem}
-                titleFont={titleFont}
-                titleFontWeight={titleFontWeight}
-                palette={palette}
+              <div style={{ display: 'flex', gap: '1rem' }} className="mt-2">
+                {userInfo && (
+                  <div
+                    style={{
+                      borderRadius: '50%',
+                      width: '42px',
+                      height: '42px',
+                      backgroundImage: `url(${userInfo.picture})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      border: selectedProfile === userInfo ? '2px solid orange' : '4px solid transparent',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => handleProfileSelect(userInfo)}
+                  />
+                )}
+                {organizations.map(org => (
+                  <div
+                    key={org.id}
+                    style={{
+                      borderRadius: '50%',
+                      width: '42px',
+                      height: '42px',
+                      backgroundImage: `url(${org.urlProfile})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      border: selectedProfile === org ? '2px solid orange' : '4px solid transparent',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => handleProfileSelect(org)}
+                  />
+                ))}
+              </div>
+              <CFormTextarea
+                className="mt-3"
+                id="postText"
+                rows="10"
+                value={postText}
+                onChange={(e) => setPostText(e.target.value)}
+                style={{ width: '600px' }}
               />
-            </CCol>
-            <CCol>
-              <CFormLabel htmlFor="postText">Post Text</CFormLabel>
-              <CInputGroup>
-                <CFormTextarea
-                  id="postText"
-                  rows="3"
-                  value={postText}
-                  onChange={(e) => setPostText(e.target.value)}
-                  style={{ width: '500px' }}
-                />
-                <CInputGroupText>
-                  <CButton id="btGeraPost" color="primary" onClick={generatePost} disabled={loading}>
-                    {loading ? <CSpinner size="sm" /> : 'Gerar Post'}
-                  </CButton>
-                </CInputGroupText>
-              </CInputGroup>
+
               <CButtonGroup role="group" aria-label="Basic radio toggle button group" className="mt-3">
                 <CFormCheck
                   type="radio"
@@ -975,20 +1088,48 @@ function Carrossel({ accessToken, userId }) {
                   checked={selectedAi === 'gemini'}
                   onChange={() => setSelectedAi('gemini')}
                 />
+
               </CButtonGroup>
+              <CButton id="btGeraPost" color="primary" onClick={generatePost} disabled={loading} style={{ marginTop: '15px', marginLeft: '50px' }}>
+                {loading ? <CSpinner size="sm" /> : 'Gerar Post'}
+              </CButton>
             </CCol>
+          </CRow>
+          <CRow className='mt-8'>
+            <CCol >
+
+
+
+
+
+
+            </CCol>
+            <CCol>
+
+              <CRow className="mt-1">
+                <CCol>
+
+
+
+
+
+
+
+
+
+                </CCol>
+              </CRow>
+
+
+
+
+
+            </CCol>
+
           </CRow>
           <CRow className="mt-4">
             <CCol>
-              <CButton color="secondary" className="me-2" onClick={saveCarousel}>
-                <CIcon icon={cilSave} /> {carouselId ? 'Save' : 'Add'}
-              </CButton>
-              <CButton color="info" className="me-2" onClick={generatePDF}>
-                <CIcon icon={cilCloudDownload} /> Download PDF
-              </CButton>
-              <CButton color="primary" onClick={postToLinkedIn}>
-                Post to LinkedIn
-              </CButton>
+
             </CCol>
           </CRow>
         </CTabPane>
@@ -1021,6 +1162,7 @@ function Carrossel({ accessToken, userId }) {
         pngImages={pngImages}
       />
       <CRow className="mt-5" />
+
     </CContainer>
   );
 }

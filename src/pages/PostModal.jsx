@@ -29,11 +29,16 @@ const PostModal = ({ isOpen = false, toggle = () => { }, onSave = () => { }, pos
   const [subject, setSubject] = useState('');
   const [ideas, setIdeas] = useState([{ summary: '' }]);
   const [currentIdeaIndex, setCurrentIdeaIndex] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [loadingSave, setLoadingSave] = useState(false);
+  const [loadingIdeas, setLoadingIdeas] = useState(false);
+  const [loadingGeneratePost, setLoadingGeneratePost] = useState(false);
+  const [loadingPostLinkedIn, setLoadingPostLinkedIn] = useState(false);
+  const [loadingGenerateImage, setLoadingGenerateImage] = useState(false);
+  const [loadingGenerateTitle, setLoadingGenerateTitle] = useState(false);
   const [accessToken] = useState('');
   const [selectedStyle, setSelectedStyle] = useState('');
   const [selectedGenerator, setSelectedGenerator] = useState('leonardo');
-  const [selectedAi, setSelectedAi] = useState('llama3'); // State for selected AI
+  const [selectedAi, setSelectedAi] = useState('llama3');
   const [toasts, setToasts] = useState([]);
 
   useEffect(() => {
@@ -62,7 +67,7 @@ const PostModal = ({ isOpen = false, toggle = () => { }, onSave = () => { }, pos
   };
 
   const handleSave = async () => {
-    setLoading(true);
+    setLoadingSave(true);
 
     const postData = {
       title,
@@ -70,7 +75,7 @@ const PostModal = ({ isOpen = false, toggle = () => { }, onSave = () => { }, pos
       image: imageUrl,
     };
     await onSave(postData);
-    setLoading(false);
+    setLoadingSave(false);
     toggle();
   };
 
@@ -93,16 +98,16 @@ const PostModal = ({ isOpen = false, toggle = () => { }, onSave = () => { }, pos
   };
 
   const handleGetPostIdeas = async () => {
-    setLoading(true);
+    setLoadingIdeas(true);
     const qtde = 3;
     try {
       const response = await axios.post('/post/post-ideas-llama', { userId, subject, qtde });
       setIdeas(response.data.ideas.ideas);
-      setCurrentIdeaIndex(0); // Reset to the first idea
+      setCurrentIdeaIndex(0);
     } catch (error) {
       console.error('Error fetching post ideas:', error);
     }
-    setLoading(false);
+    setLoadingIdeas(false);
   };
 
   const handlePrevIdea = () => {
@@ -118,7 +123,7 @@ const PostModal = ({ isOpen = false, toggle = () => { }, onSave = () => { }, pos
   };
 
   const handleGeneratePost = async () => {
-    setLoading(true);
+    setLoadingGeneratePost(true);
 
     if (ideas[currentIdeaIndex]) {
       try {
@@ -139,18 +144,18 @@ const PostModal = ({ isOpen = false, toggle = () => { }, onSave = () => { }, pos
         console.error('Error generating post:', error);
         addToast(t('post_generated_error'), 'warning');
       }
-      setLoading(false);
+      setLoadingGeneratePost(false);
     }
   };
 
   const handlePostToLinkedIn = async () => {
-    setLoading(true);
+    setLoadingPostLinkedIn(true);
 
     const storedAccessToken = localStorage.getItem('access_token') || accessToken;
     if (!storedAccessToken) {
       addToast(t('login_linkedin_warning'), 'warning');
-      setLoading(false);
-      window.location.href = '/loginLinkedin'; // Redirecionar para a página de login
+      setLoadingPostLinkedIn(false);
+      window.location.href = '/loginLinkedin';
       return;
     }
 
@@ -171,14 +176,14 @@ const PostModal = ({ isOpen = false, toggle = () => { }, onSave = () => { }, pos
       console.error('Erro ao postar no LinkedIn:', error);
       addToast(t('linkedin_post_error'), 'warning');
     }
-    setLoading(false);
+    setLoadingPostLinkedIn(false);
     toggle();
   };
 
   const handleGenerateImage = async () => {
     const contextText = document.getElementById('content').value;
     if (contextText && selectedStyle) {
-      setLoading(true);
+      setLoadingGenerateImage(true);
       try {
         const response = selectedGenerator === 'leonardo'
           ? await axios.post('/post/gerar-imagem-leo', { userId, prompt: contextText, estilo: selectedStyle })
@@ -190,14 +195,14 @@ const PostModal = ({ isOpen = false, toggle = () => { }, onSave = () => { }, pos
         console.error('Error generating image:', error);
         addToast(t('image_upload_error'), 'warning');
       }
-      setLoading(false);
+      setLoadingGenerateImage(false);
     }
   };
 
   const handleGenerateTitle = async () => {
     const contentText = document.getElementById('content').value;
     if (contentText) {
-      setLoading(true);
+      setLoadingGenerateTitle(true);
       try {
         const response = await axios.post('/post/gerar-titulo', { userId, content: contentText });
         setTitle(response.data.title);
@@ -206,7 +211,7 @@ const PostModal = ({ isOpen = false, toggle = () => { }, onSave = () => { }, pos
         console.error('Error generating title:', error);
         addToast(t('title_generated_error'), 'warning');
       }
-      setLoading(false);
+      setLoadingGenerateTitle(false);
     }
   };
 
@@ -243,8 +248,8 @@ const PostModal = ({ isOpen = false, toggle = () => { }, onSave = () => { }, pos
                   onChange={(e) => setSubject(e.target.value)}
                 />
                 <InputGroupText>
-                  <Button id="btGeraIdeias" color="warning" onClick={handleGetPostIdeas} disabled={loading}>
-                    {loading ? <Spinner size="sm" /> : <i className="fa fa-bolt"></i>}
+                  <Button id="btGeraIdeias" color="warning" onClick={handleGetPostIdeas} disabled={loadingIdeas}>
+                    {loadingIdeas ? <Spinner size="sm" /> : <i className="fa fa-bolt"></i>}
                   </Button>
                 </InputGroupText>
               </InputGroup>
@@ -317,8 +322,8 @@ const PostModal = ({ isOpen = false, toggle = () => { }, onSave = () => { }, pos
                     />
                   </CButtonGroup>
                 </FormGroup>
-                <Button color="warning" onClick={handleGeneratePost} disabled={loading}>
-                  {loading ? <Spinner size="sm" /> : t('generate_post')}
+                <Button color="warning" onClick={handleGeneratePost} disabled={loadingGeneratePost}>
+                  {loadingGeneratePost ? <Spinner size="sm" /> : t('generate_post')}
                 </Button>
               </div>
             </FormGroup>
@@ -335,8 +340,8 @@ const PostModal = ({ isOpen = false, toggle = () => { }, onSave = () => { }, pos
                   onChange={(e) => setTitle(e.target.value)}
                 />
                 <InputGroupText>
-                  <Button id="btGeraTitulo" color="warning" onClick={handleGenerateTitle} disabled={loading}>
-                    {loading ? <Spinner size="sm" /> : <i className="fa fa-bolt"></i>}
+                  <Button id="btGeraTitulo" color="warning" onClick={handleGenerateTitle} disabled={loadingGenerateTitle}>
+                    {loadingGenerateTitle ? <Spinner size="sm" /> : <i className="fa fa-bolt"></i>}
                   </Button>
                 </InputGroupText>
               </InputGroup>
@@ -389,8 +394,8 @@ const PostModal = ({ isOpen = false, toggle = () => { }, onSave = () => { }, pos
                   <option value="peaky">Peaky Blinder</option>
                   <option value="indio">Índio Norte Americano</option>
                 </Input>
-                <Button color="warning" onClick={handleGenerateImage} disabled={loading} className="ml-2">
-                  {loading ? <Spinner size="sm" /> : <i className="fa fa-bolt"></i>}
+                <Button color="warning" onClick={handleGenerateImage} disabled={loadingGenerateImage} className="ml-2">
+                  {loadingGenerateImage ? <Spinner size="sm" /> : <i className="fa fa-bolt"></i>}
                 </Button>
               </div>
             </FormGroup>
@@ -434,8 +439,8 @@ const PostModal = ({ isOpen = false, toggle = () => { }, onSave = () => { }, pos
         </Row>
       </ModalBody>
       <ModalFooter>
-        <Button color="primary" onClick={handleSave}>{post ? t('save') : t('add')}</Button>
-        <Button color="success" onClick={handlePostToLinkedIn}>{t('post')}</Button>
+        <Button color="primary" onClick={handleSave} disabled={loadingSave}>{post ? t('save') : t('add')}</Button>
+        <Button color="success" onClick={handlePostToLinkedIn} disabled={loadingPostLinkedIn}>{t('post')}</Button>
         <Button color="secondary" onClick={toggle}>{t('cancel')}</Button>
       </ModalFooter>
       <CToaster position="top-right">
